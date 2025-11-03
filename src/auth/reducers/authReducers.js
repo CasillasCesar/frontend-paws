@@ -1,44 +1,48 @@
 // src/auth/reducers/authReducer.js
 
-// 1. Estado Inicial
-// Por defecto, nadie está autenticado, no hay token ni información del usuario.
-const initialAuthState = {
-  isAuthenticated: false, // El usuario no está logueado
-  token: null,            // No hay token de autenticación
-  user: null,             // No hay datos del usuario
+// 1. Tipos de Acciones (Buenas prácticas: evitamos errores de tipeo)
+export const AuthActionTypes = {
+  LOGIN_SUCCESS: 'LOGIN_SUCCESS',
+  LOGOUT: 'LOGOUT',
+  // Podríamos añadir CHECK_AUTH (para verificar el token en localStorage al iniciar la app)
+};
+
+// 2. Estado Inicial (Define la forma de nuestro estado de sesión)
+export const initialAuthState = {
+  isAuthenticated: false, // Por defecto, no hay sesión activa
+  token: null,            // El token JWT
+  user: null,             // La información del usuario (nombre, email, roles, etc.)
 };
 
 /**
- * Función Reducer
- * @param {*} state 
- * @param {*} action 
- * @returns 
+ * 3. Función Reducer
+ * Función pura que recibe el estado actual y una acción, y devuelve el nuevo estado.
+ * @param {object} state - El estado actual del contexto de autenticación.
+ * @param {object} action - La acción a ejecutar ({ type: string, payload: any }).
+ * @returns {object} El nuevo estado.
  */
 export const authReducer = (state, action) => {
-  // El 'type' de la acción es la instrucción que recibimos.
   switch (action.type) {
-    // Caso 1: Instrucción de éxito de login
-    case 'LOGIN_SUCCESS':
+
+    case AuthActionTypes.LOGIN_SUCCESS:
+      // Cuando el login es exitoso, actualizamos el estado
       return {
-        // ...state: Mantenemos el estado actual por si acaso
         ...state,
-        // Los cambios:
         isAuthenticated: true,
-        token: action.payload.token, // Guardamos el token que viene en la acción
-        user: action.payload.user,   // Guardamos la info del usuario
+        token: action.payload.token,
+        user: action.payload.user,
       };
 
-    // Caso 2: Instrucción de cierre de sesión
-    case 'LOGOUT':
+    case AuthActionTypes.LOGOUT:
+      // Cuando se cierra sesión, reseteamos el estado a los valores iniciales
       return {
-        // Limpiamos todo y volvemos al estado inicial
-        isAuthenticated: false,
-        token: null,
-        user: null,
+        isAuthenticated: initialAuthState.isAuthenticated, // false
+        token: initialAuthState.token,                     // null
+        user: initialAuthState.user,                       // null
       };
 
-    // Caso por defecto: si la instrucción no se reconoce, devolvemos el estado sin cambios
     default:
+      // Si la acción no es reconocida, retornamos el estado sin cambios.
       return state;
   }
 };
