@@ -1,6 +1,6 @@
 // src/auth/context/AuthContext.jsx
 import { createContext, useContext, useReducer } from 'react';
-import { initialAuthState, authReducer } from '../reducers/authReducer';
+import { initialAuthState, authReducer } from '../reducers/authReducers';
 
 // 1. Crear el Contexto
 // Tendrá el estado actual (state) y la función para enviar acciones (dispatch)
