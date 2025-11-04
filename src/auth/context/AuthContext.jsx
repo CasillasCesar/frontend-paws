@@ -1,6 +1,6 @@
 // src/auth/context/AuthContext.jsx
 import { createContext, useContext, useReducer, useEffect } from 'react';
-import { initialAuthState, authReducer } from '../reducers/authReducers';
+import { initialAuthState, authReducer, AuthActionTypes } from '../reducers/authReducers';
 import { loadToken } from "../../utils/tokenUtils";
 
 // 1. Crear el Contexto

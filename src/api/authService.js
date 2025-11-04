@@ -25,4 +25,23 @@ export const login = async (credentials) => {
   }
 };
 
+/**
+ * Llama al endpoint de verificación 2FA
+ * @param {object} data - Contiene { userId, code }.
+ * @returns {Promise<object>} Promesa que resuelve a { token, user, message } o lanza un error.
+ */
+export const verifyCode = async (data) => {
+  try {
+    // El endpoint de verificación es '/verify-2fa'
+    const response = await axios.post(`${API_URL}/verify-2fa`, data);
+    
+    // Asumimos que el servidor devuelve { token, user, message }
+    return response.data; 
+    
+  } catch (error) {
+    console.error("Fallo la llamada a la API de verificación:", error.response?.data || error.message);
+    throw error.response?.data || error.message; 
+  }
+};
+
 // Aquí podríamos añadir otras funciones como register, forgotPassword, etc.
