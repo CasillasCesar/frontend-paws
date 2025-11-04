@@ -15,10 +15,11 @@ export default function App() {
   let content;
   
   if (authState.isAuthenticated) {
+    const userName = authState.user?.name || 'Usuario';
     // 1. Vista AUTENTICADA (Sesión Finalizada)
     content = (
       <div className="alert alert-success text-center">
-        <h2>¡Bienvenido, {authState.user?.name || 'Usuario'}!</h2>
+        <h2>¡Bienvenido, {userName}!</h2>
         <p>El estado global está en **Autenticado**. Token activo.</p>
         <button onClick={handleLogout} className="btn btn-danger mt-3">
           Cerrar Sesión
