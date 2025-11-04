@@ -48,6 +48,8 @@ export default function Productos() {
   useEffect(() => {
     fetchProductos();
   }, []);
+
+  // 🔹 Crear o actualizar producto
 // 🔹 Crear o actualizar producto
 const handleSubmit = async (e) => {
   e.preventDefault();
@@ -58,9 +60,17 @@ const handleSubmit = async (e) => {
   const method = modoEdicion ? "PUT" : "POST";
 
   try {
-    // 🔹 Si es nuevo, quitamos el id del cuerpo antes de enviar
-    const dataToSend = { ...form };
-    if (!modoEdicion) {
+    // 🔹 Copiamos el formulario
+    let dataToSend = { ...form };
+
+    if (modoEdicion) {
+      // Si se está actualizando, quitamos campos que no deben enviarse
+      delete dataToSend.stock_minimo;
+      delete dataToSend.stock_actual;
+      delete dataToSend.created_at;
+      delete dataToSend.updated_at;
+    } else {
+      // Si es nuevo, quitamos el id (lo genera el backend)
       delete dataToSend.id_producto;
     }
 
@@ -92,10 +102,11 @@ const handleSubmit = async (e) => {
         data.details ? `${data.message}: ${data.details}` : data.message
       );
     }
-  } catch {
+  } catch (error) {
     mostrarMensaje("danger", "No se pudo conectar con el servidor");
   }
 };
+
 
   // 🔹 Eliminar producto
   const eliminarProducto = async (id) => {
@@ -136,6 +147,7 @@ const cambiarEstado = async (id, activo) => {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id_producto: id, activo: activo ? 0 : 1 }),
+      
     });
     const data = await res.json();
 

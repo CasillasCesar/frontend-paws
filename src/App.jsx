@@ -1,10 +1,22 @@
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import NavbarApp from "./pages/Navbar/NavbarApp.jsx";
+import Productos from "./pages/Productos/productos.jsx";
 
-
-import Productos from "./pages/Productos/productos";
-
+const Inicio = () => (
+  <div className="container mt-5 text-center">
+    <h2>🌿 Bienvenido a Fressisimo</h2>
+    <p>Selecciona una opción del menú para continuar.</p>
+  </div>
+);
 
 export default function App() {
-  return <Productos />;
+  return (
+    <Router>
+      <NavbarApp /> {/* 🔹 Siempre visible */}
+      <Routes>
+        <Route path="/" element={<Inicio />} />
+        <Route path="/productos" element={<Productos />} />
+      </Routes>
+    </Router>
+  );
 }
