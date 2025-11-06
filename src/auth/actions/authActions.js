@@ -3,6 +3,7 @@
 import { AuthActionTypes } from '../reducers/authReducers';
 import { login, verifyCode } from '../../api/authService';
 import { saveToken, removeToken, saveUserData, removeUserData} from '../../utils/tokenUtils';
+import { toast } from 'react-toastify';
 
 /**
  * ACCIÓN PRINCIPAL: Maneja el Envío de Credenciales.
@@ -19,6 +20,12 @@ export const loginUser = async (dispatch, credentials) => {
     if (response.needsVerification) {
       console.log('-> Login OK. Requiere verificación 2FA. Disparando VERIFICATION_REQUIRED.');
 
+      // Notificación informativa al usuario
+      toast.info("Se requiere código de verificación de doble factor.", {
+        position: "bottom-center",
+        autoClose: 5000,
+      });
+
       // Notificar al Reducer que muestre el formulario 2FA
       dispatch({
         type: AuthActionTypes.VERIFICATION_REQUIRED,
@@ -33,6 +40,14 @@ export const loginUser = async (dispatch, credentials) => {
     const { token, user } = response;
 
     saveToken(token);
+    saveUserData(user);
+
+    // MOVER TOAST ANTES DEL DISPATCH PARA EVITAR REDIRECCIONES PREMATURAS
+    toast.success(`👋 Login Exitoso. ¡Bienvenido, ${user.name || 'Usuario'}!`, {
+        position: "top-center",
+        autoClose: 3000,
+        theme: "colored",
+    });
     
     dispatch({
       type: AuthActionTypes.LOGIN_SUCCESS,
@@ -42,6 +57,10 @@ export const loginUser = async (dispatch, credentials) => {
     return { needsVerification: false }; // Éxito de login directo
   } catch (error) {
     console.error('Error durante el inicio de sesión:', error);
+    // Muestra un error correcto para credenciales inválidas
+    toast.error(error.message || "Credenciales inválidas o error de servidor. Inténtalo de nuevo.", {
+        position: "bottom-center",
+    });
     throw error; 
   }
 };
@@ -64,6 +83,13 @@ export const verifyCodeUser = async (dispatch, userId, code) => {
         // 2. Persistir el token (¡Solo si es el éxito final!)
         saveToken(token);
         saveUserData(user);
+
+        // MOVER TOAST ANTES DEL DISPATCH PARA EVITAR REDIRECCIONES PREMATURAS
+        toast.success(`👋 Login Exitoso. ¡Bienvenido, ${user.name || 'Usuario'}!`, {
+            position: "top-center",
+            autoClose: 3000,
+            theme: "colored",
+        });
         
         // 3. Disparar el éxito final del login
         dispatch({
@@ -74,6 +100,12 @@ export const verifyCodeUser = async (dispatch, userId, code) => {
         return message; // Retornamos el mensaje de éxito para la UI
     } catch (error) {
         console.error('Error durante la verificación 2FA:', error);
+
+        // TOAST DE ERROR si el código es incorrecto
+        toast.error(error.message || "El código de verificación es incorrecto.", {
+            position: "bottom-center",
+        });
+
         // El error relanzado será capturado por el VerificationForm
         throw error; 
     }
@@ -89,5 +121,12 @@ export const logoutUser = (dispatch) => {
   removeUserData();
   dispatch({
     type: AuthActionTypes.LOGOUT,
+  });
+
+  // Toast para informar que la sesión fue cerrada
+  toast.info("Sesión cerrada correctamente. ¡Vuelve pronto!", {
+      position: "top-right",
+      autoClose: 2000,
+      theme: "dark",
   });
 };

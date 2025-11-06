@@ -1,5 +1,3 @@
-// src/App.jsx
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import NavbarApp from "./pages/Navbar/NavbarApp.jsx";
@@ -11,10 +9,9 @@ import { VerificationForm } from './components/Auth/VerificationForm';
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute.jsx";
 import { GuestRoute } from "./components/Auth/GuestRoute.jsx";
 
+import { ToastContainer } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
-// Importaciones de Recuperación de Contraseña (Comentadas para evitar errores de compilación)
-// import { ForgotPasswordForm } from './components/Auth/ForgotPasswordForm'; 
-// import { ResetPasswordForm } from './components/Auth/ResetPasswordForm'; 
 
 // Componente simple de inicio
 const Inicio = ({ user }) => (
@@ -42,58 +39,69 @@ export default function App() {
     const handleLogout = () => {
         // Llama a la acción que limpia el estado y el token
         logoutUser(dispatch);
-        console.log("Hizo Logout"); // Puedes descomentar este log para verificar si el handler se ejecuta
+        console.log("Hizo Logout");
     };
 
-    // Vista DE 2FA: Credenciales correctas, pero falta el código de verificación.
-    if (authState.needsVerification) {
-        return (
-            <Router>
-                {/* <NavbarApp /> */}
-                <div className="container">
-                    {/* Solo mostramos el formulario de verificación. */}
-                    <VerificationForm />
-                </div>
-            </Router>
-        );
-    }
-
-    // Vista Principal: Ahora gestiona el login y las rutas protegidas en un solo bloque
+    // Estructura unificada para asegurar que el ToastContainer SIEMPRE esté montado.
     return (
         <Router>
-            <NavbarApp />
-            <Routes>
+            {/* 1. CONTENEDOR DE TOASTS: SIEMPRE DEBE ESTAR AL INICIO */}
+            <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+            />
 
-                {/* 1. Ruta de Login - AHORA PROTEGIDA PARA USUARIOS LOGUEADOS */}
-                <Route
-                    path="/login"
-                    element={
-                        <GuestRoute>
-                            <LoginForm />
-                        </GuestRoute>
-                    }
-                />
+            {/* 2. RENDERIZADO CONDICIONAL DEL CONTENIDO PRINCIPAL */}
+            {authState.needsVerification ? (
+                // Muestra solo el formulario de verificación
+                <div className="container">
+                    <VerificationForm />
+                </div>
+            ) : (
+                // Muestra la navegación y las rutas normales
+                <>
+                    <NavbarApp />
+                    <Routes>
+                        {/* 1. Ruta de Login - AHORA PROTEGIDA PARA USUARIOS LOGUEADOS */}
+                        <Route
+                            path="/login"
+                            element={
+                                <GuestRoute>
+                                    <LoginForm />
+                                </GuestRoute>
+                            }
+                        />
 
-                {/* 2. Rutas Protegidas (Todas las demás) */}
-                <Route
-                    path="*"
-                    element={
-                        <ProtectedRoute>
-                            <Routes>
-                                {/* Las rutas "/" y "/productos" SÓLO se verán si ProtectedRoute da acceso */}
-                                <Route path="/" element={<Inicio user={authState.user} />} />
-                                <Route path="/dashboard" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} />
-                                <Route path="/productos" element={<Productos />} />
+                        {/* 2. Rutas Protegidas (Todas las demás) */}
+                        <Route
+                            path="*"
+                            element={
+                                <ProtectedRoute>
+                                    <Routes>
+                                        {/* Las rutas "/" y "/productos" SÓLO se verán si ProtectedRoute da acceso */}
+                                        <Route path="/" element={<Inicio user={authState.user} />} />
+                                        <Route path="/dashboard" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} />
+                                        <Route path="/productos" element={<Productos />} />
 
-                                {/* Opcional: Redirigir el login al home dentro de la vista autenticada */}
-                                <Route path="/login" element={<Navigate to="/" replace />} />
+                                        {/* Opcional: Redirigir el login al home dentro de la vista autenticada */}
+                                        <Route path="/login" element={<Navigate to="/" replace />} />
 
-                            </Routes>
-                        </ProtectedRoute>
-                    }
-                />
+                                    </Routes>
+                                </ProtectedRoute>
+                            }
+                        />
 
-            </Routes>
+                    </Routes>
+                </>
+            )}
         </Router>
     );
 }
