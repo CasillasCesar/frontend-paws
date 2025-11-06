@@ -1,13 +1,16 @@
 // src/App.jsx
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import NavbarApp from "./pages/Navbar/NavbarApp.jsx";
 import Productos from "./pages/Productos/productos.jsx";
 import { useAuth } from './auth/context/AuthContext';
 import { logoutUser } from './auth/actions/authActions'; 
 import { LoginForm } from './components/Auth/LoginForm'; 
 import { VerificationForm } from './components/Auth/VerificationForm'; 
+import { ProtectedRoute } from "./components/Auth/ProtectedRoute.jsx";
+import { GuestRoute } from "./components/Auth/GuestRoute.jsx";
+
 
 // Importaciones de Recuperación de Contraseña (Comentadas para evitar errores de compilación)
 // import { ForgotPasswordForm } from './components/Auth/ForgotPasswordForm'; 
@@ -32,7 +35,6 @@ const Dashboard = ({ user, handleLogout }) => (
     </div>
 );
 
-
 export default function App() {
     const { authState, dispatch } = useAuth();
     
@@ -42,28 +44,9 @@ export default function App() {
         logoutUser(dispatch); 
         console.log("Hizo Logout"); // Puedes descomentar este log para verificar si el handler se ejecuta
     };
-
-    // 1. Vista AUTENTICADA: El usuario ha pasado el 2FA y está logueado.
-    if (authState.isAuthenticated) {
-        
-        return (
-            <Router>
-                <NavbarApp />
-                <Routes>
-                    <Route path="/" element={<Inicio user={authState.user} />} />
-                    <Route path="/dashboard" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} />
-                    <Route path="/productos" element={<Productos />} />
-                    
-                    {/* Redirige Login o cualquier otra ruta a la vista del Dashboard/Inicio */}
-                    <Route path="/login" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} />
-                    <Route path="*" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} /> 
-                </Routes>
-            </Router>
-        );
-    } 
     
-    // 2. Vista PENDIENTE DE 2FA: Credenciales correctas, pero falta el código de verificación.
-    else if (authState.needsVerification) {
+    // Vista DE 2FA: Credenciales correctas, pero falta el código de verificación.
+    if (authState.needsVerification) {
         return (
             <Router>
                 {/* <NavbarApp /> */}
@@ -75,26 +58,42 @@ export default function App() {
         );
     } 
     
-    // 3. Vista NO AUTENTICADA: Todas las rutas redirigen al Login.
-    else {
-        console.log("Aqui");
-        
-        return (
-            <Router>
-                {/* <NavbarApp /> */}
-                <Routes>
-                    
-                    {/* Única ruta explícitamente permitida sin autenticación */}
-                    <Route path="/login" element={<LoginForm />} />
-                    
-                    {/* Rutas de Recuperación de Contraseña (Comentadas) */}
-                    {/* <Route path="/forgot-password" element={<ForgotPasswordForm />} /> */}
-                    {/* <Route path="/reset-password/:token" element={<ResetPasswordForm />} /> */}
-
-                    {/* Cualquier otra ruta (incluyendo /, /productos, /dashboard) lleva al login */}
-                    <Route path="*" element={<LoginForm />} />
-                </Routes>
-            </Router>
-        );
-    }
+    // Vista Principal: Ahora gestiona el login y las rutas protegidas en un solo bloque
+    return (
+        <Router>
+            <NavbarApp /> 
+            <Routes>
+                
+                {/* 1. Ruta de Login - AHORA PROTEGIDA PARA USUARIOS LOGUEADOS */}
+                <Route 
+                    path="/login" 
+                    element={
+                        <GuestRoute>
+                            <LoginForm />
+                        </GuestRoute>
+                    } 
+                />
+                
+                {/* 2. Rutas Protegidas (Todas las demás) */}
+                <Route 
+                    path="*" 
+                    element={
+                        <ProtectedRoute>
+                            <Routes>
+                                {/* Las rutas "/" y "/productos" SÓLO se verán si ProtectedRoute da acceso */}
+                                <Route path="/" element={<Inicio user={authState.user} />} />
+                                <Route path="/dashboard" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} />
+                                <Route path="/productos" element={<Productos />} />
+                                
+                                {/* Opcional: Redirigir el login al home dentro de la vista autenticada */}
+                                <Route path="/login" element={<Navigate to="/" replace />} />
+                                
+                            </Routes>
+                        </ProtectedRoute>
+                    } 
+                />
+                
+            </Routes>
+        </Router>
+    );
 }

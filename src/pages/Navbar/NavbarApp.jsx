@@ -20,6 +20,10 @@ export default function NavbarApp() {
         // Opcional: navegar explícitamente al login o home
         navigate("/login"); 
     };
+
+  const handleLogin = () => {
+        navigate("/login");
+    };
     
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-success">
@@ -51,12 +55,26 @@ export default function NavbarApp() {
             </li>
           </ul>
 
-          {/* MOSTRAR BOTÓN SOLO SI ESTÁ AUTENTICADO */}
-                    {authState.isAuthenticated && (
-                        <button onClick={handleLogout} className="btn btn-outline-light d-flex align-items-center">
-                            <i className="bi bi-box-arrow-right me-1"></i> Cerrar sesión
-                        </button>
-                    )}
+          {/* LÓGICA CONDICIONAL: Mostrar Login o Logout */}
+                    <div className="d-flex">
+                        {authState.isAuthenticated ? (
+                            // Opción 1: Sesión Activa -> Mostrar Logout
+                            <button 
+                                onClick={handleLogout} 
+                                className="btn btn-outline-light d-flex align-items-center"
+                            >
+                                <i className="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
+                            </button>
+                        ) : (
+                            // Opción 2: Sesión Inactiva -> Mostrar Login
+                            <button 
+                                onClick={handleLogin} 
+                                className="btn btn-outline-light d-flex align-items-center"
+                            >
+                                <i className="bi bi-person-circle me-1"></i> Iniciar Sesión
+                            </button>
+                        )}
+                    </div>
         </div>
       </div>
     </nav>
