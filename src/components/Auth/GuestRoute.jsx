@@ -15,7 +15,7 @@ export const GuestRoute = ({ children }) => {
     // Si el usuario SÍ está autenticado, lo redirigimos a la página principal
     if (authState.isAuthenticated) {
         // Redirige al home
-        return <Navigate to="/" replace />; 
+        return <Navigate to="/" replace />;
     }
 
     // Si el usuario NO está autenticado, renderizamos el componente hijo (LoginForm)

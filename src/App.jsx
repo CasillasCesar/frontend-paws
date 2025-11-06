@@ -5,9 +5,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import NavbarApp from "./pages/Navbar/NavbarApp.jsx";
 import Productos from "./pages/Productos/productos.jsx";
 import { useAuth } from './auth/context/AuthContext';
-import { logoutUser } from './auth/actions/authActions'; 
-import { LoginForm } from './components/Auth/LoginForm'; 
-import { VerificationForm } from './components/Auth/VerificationForm'; 
+import { logoutUser } from './auth/actions/authActions';
+import { LoginForm } from './components/Auth/LoginForm';
+import { VerificationForm } from './components/Auth/VerificationForm';
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute.jsx";
 import { GuestRoute } from "./components/Auth/GuestRoute.jsx";
 
@@ -17,7 +17,7 @@ import { GuestRoute } from "./components/Auth/GuestRoute.jsx";
 // import { ResetPasswordForm } from './components/Auth/ResetPasswordForm'; 
 
 // Componente simple de inicio
-const Inicio = ({user}) => (
+const Inicio = ({ user }) => (
     <div className="container mt-5 text-center">
         <h2>Bienvenido a Fressisimo, {user?.name || 'Cesar'}</h2>
         <p>Selecciona una opción del menú para continuar.</p>
@@ -37,14 +37,14 @@ const Dashboard = ({ user, handleLogout }) => (
 
 export default function App() {
     const { authState, dispatch } = useAuth();
-    
+
     // Función para manejar el cierre de sesión
     const handleLogout = () => {
         // Llama a la acción que limpia el estado y el token
-        logoutUser(dispatch); 
+        logoutUser(dispatch);
         console.log("Hizo Logout"); // Puedes descomentar este log para verificar si el handler se ejecuta
     };
-    
+
     // Vista DE 2FA: Credenciales correctas, pero falta el código de verificación.
     if (authState.needsVerification) {
         return (
@@ -56,27 +56,27 @@ export default function App() {
                 </div>
             </Router>
         );
-    } 
-    
+    }
+
     // Vista Principal: Ahora gestiona el login y las rutas protegidas en un solo bloque
     return (
         <Router>
-            <NavbarApp /> 
+            <NavbarApp />
             <Routes>
-                
+
                 {/* 1. Ruta de Login - AHORA PROTEGIDA PARA USUARIOS LOGUEADOS */}
-                <Route 
-                    path="/login" 
+                <Route
+                    path="/login"
                     element={
                         <GuestRoute>
                             <LoginForm />
                         </GuestRoute>
-                    } 
+                    }
                 />
-                
+
                 {/* 2. Rutas Protegidas (Todas las demás) */}
-                <Route 
-                    path="*" 
+                <Route
+                    path="*"
                     element={
                         <ProtectedRoute>
                             <Routes>
@@ -84,15 +84,15 @@ export default function App() {
                                 <Route path="/" element={<Inicio user={authState.user} />} />
                                 <Route path="/dashboard" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} />
                                 <Route path="/productos" element={<Productos />} />
-                                
+
                                 {/* Opcional: Redirigir el login al home dentro de la vista autenticada */}
                                 <Route path="/login" element={<Navigate to="/" replace />} />
-                                
+
                             </Routes>
                         </ProtectedRoute>
-                    } 
+                    }
                 />
-                
+
             </Routes>
         </Router>
     );

@@ -8,23 +8,23 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function NavbarApp() {
   // OBTENER EL ESTADO Y EL DISPATCH
-    const { authState, dispatch } = useAuth();
-    const navigate = useNavigate();
+  const { authState, dispatch } = useAuth();
+  const navigate = useNavigate();
 
 
 
   const handleLogout = () => {
-        // Esta es la única línea que realmente limpia el estado global
-        logoutUser(dispatch); 
-        
-        // Opcional: navegar explícitamente al login o home
-        navigate("/login"); 
-    };
+    // Esta es la única línea que realmente limpia el estado global
+    logoutUser(dispatch);
+
+    // Opcional: navegar explícitamente al login o home
+    navigate("/login");
+  };
 
   const handleLogin = () => {
-        navigate("/login");
-    };
-    
+    navigate("/login");
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-success">
       <div className="container-fluid">
@@ -56,25 +56,25 @@ export default function NavbarApp() {
           </ul>
 
           {/* LÓGICA CONDICIONAL: Mostrar Login o Logout */}
-                    <div className="d-flex">
-                        {authState.isAuthenticated ? (
-                            // Opción 1: Sesión Activa -> Mostrar Logout
-                            <button 
-                                onClick={handleLogout} 
-                                className="btn btn-outline-light d-flex align-items-center"
-                            >
-                                <i className="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
-                            </button>
-                        ) : (
-                            // Opción 2: Sesión Inactiva -> Mostrar Login
-                            <button 
-                                onClick={handleLogin} 
-                                className="btn btn-outline-light d-flex align-items-center"
-                            >
-                                <i className="bi bi-person-circle me-1"></i> Iniciar Sesión
-                            </button>
-                        )}
-                    </div>
+          <div className="d-flex">
+            {authState.isAuthenticated ? (
+              // Opción 1: Sesión Activa -> Mostrar Logout
+              <button
+                onClick={handleLogout}
+                className="btn btn-outline-light d-flex align-items-center"
+              >
+                <i className="bi bi-box-arrow-right me-1"></i> Cerrar Sesión
+              </button>
+            ) : (
+              // Opción 2: Sesión Inactiva -> Mostrar Login
+              <button
+                onClick={handleLogin}
+                className="btn btn-outline-light d-flex align-items-center"
+              >
+                <i className="bi bi-person-circle me-1"></i> Iniciar Sesión
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </nav>

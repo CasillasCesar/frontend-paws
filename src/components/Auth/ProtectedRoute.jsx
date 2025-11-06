@@ -15,7 +15,7 @@ export const ProtectedRoute = ({ children }) => {
     // Si el usuario NO está autenticado, lo redirigimos al login
     if (!authState.isAuthenticated) {
         // 'replace' borra la entrada de la ruta actual del historial de navegación
-        return <Navigate to="/login" replace />; 
+        return <Navigate to="/login" replace />;
     }
 
     // Si el usuario SÍ está autenticado, renderizamos el componente hijo
