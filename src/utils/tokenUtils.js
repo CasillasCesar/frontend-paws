@@ -1,5 +1,7 @@
 // src/utils/tokenUtils.js
 
+// #region Token
+
 const TOKEN_KEY = 'authToken'; // La llave única para almacenar nuestro token
 
 /**
@@ -35,3 +37,45 @@ export const loadToken = () => {
     return null;
   }
 };
+
+//#endregion
+
+//#region UserData
+const USER_DATA_KEY = 'userData';
+/**
+ * Guarda los datos del usuario (name, rol, etc.) en localStorage.
+ */
+export const saveUserData = (userData) => {
+  try {
+    // Es CRÍTICO usar JSON.stringify para convertir el objeto a texto
+    localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+  } catch (e) {
+    console.error("Error al guardar los datos del usuario", e);
+  }
+};
+
+/**
+ * Lee los datos del usuario de localStorage.
+ */
+export const loadUserData = () => {
+  try {
+    const data = localStorage.getItem(USER_DATA_KEY);
+    // Si hay datos, se usa JSON.parse para convertir el texto a objeto
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.error("Error al cargar los datos del usuario", e);
+    return null;
+  }
+};
+
+/**
+ * Remueve los datos del usuario de localStorage (CRÍTICO para Logout).
+ */
+export const removeUserData = () => {
+  try {
+    localStorage.removeItem(USER_DATA_KEY);
+  } catch (e) {
+    console.error("Error al remover los datos del usuario", e);
+  }
+};
+//#endregion

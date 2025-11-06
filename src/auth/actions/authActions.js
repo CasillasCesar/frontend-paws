@@ -2,7 +2,7 @@
 
 import { AuthActionTypes } from '../reducers/authReducers';
 import { login, verifyCode } from '../../api/authService';
-import { saveToken, removeToken } from '../../utils/tokenUtils';
+import { saveToken, removeToken, saveUserData, removeUserData} from '../../utils/tokenUtils';
 
 /**
  * ACCIÓN PRINCIPAL: Maneja el Envío de Credenciales.
@@ -63,6 +63,7 @@ export const verifyCodeUser = async (dispatch, userId, code) => {
 
         // 2. Persistir el token (¡Solo si es el éxito final!)
         saveToken(token);
+        saveUserData(user);
         
         // 3. Disparar el éxito final del login
         dispatch({
@@ -85,6 +86,7 @@ export const verifyCodeUser = async (dispatch, userId, code) => {
  */
 export const logoutUser = (dispatch) => {
   removeToken();
+  removeUserData();
   dispatch({
     type: AuthActionTypes.LOGOUT,
   });

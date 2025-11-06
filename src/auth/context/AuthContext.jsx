@@ -1,7 +1,7 @@
 // src/auth/context/AuthContext.jsx
 import { createContext, useContext, useReducer, useEffect } from 'react';
 import { initialAuthState, authReducer, AuthActionTypes } from '../reducers/authReducers';
-import { loadToken } from "../../utils/tokenUtils";
+import { loadToken, loadUserData, removeToken, removeUserData } from "../../utils/tokenUtils";
 
 // 1. Crear el Contexto
 // Tendrá el estado actual (state) y la función para enviar acciones (dispatch)
@@ -18,8 +18,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // 1. Intentar cargar el token de localStorage
     const token = loadToken();
+    const user = loadUserData()
 
-    if (token) {
+    if (token && user) {
       // Si hay un token, asumimos que es válido (o lo validaremos más tarde)
       // y disparamos una acción para RESTAURAR el estado de autenticación.
       
@@ -28,12 +29,16 @@ export const AuthProvider = ({ children }) => {
 
       dispatch({
         // Usamos la misma acción que LOGIN_SUCCESS, pero sin la contraseña (payload)
-        type: AuthActionTypes.LOGIN_SUCCESS, 
-        payload: { token, user: null }, // user es null, se cargará después si es necesario
+        type: AuthActionTypes.REHYDRATE_SESSION, 
+        payload: { token, user }, 
       });
 
       console.log('Sesión rehidratada desde localStorage.');
     } else {
+      if (token) { 
+        removeToken(); 
+        removeUserData();
+      }
       console.log('No se encontró token. La sesión permanece cerrada.');
     }
   // El useEffect se ejecuta una sola vez al montar el componente (array de dependencia vacío)
