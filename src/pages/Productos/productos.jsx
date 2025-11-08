@@ -55,55 +55,69 @@ export default function Productos() {
   }, []);
 
   // 🔹 Crear o actualizar producto
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const url = modoEdicion
-      ? `${API_URL}/products/update`
-      : `${API_URL}/products/nuevo`;
-    const method = modoEdicion ? "PUT" : "POST";
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const url = modoEdicion
+    ? `${API_URL}/products/update`
+    : `${API_URL}/products/nuevo`;
+  const method = modoEdicion ? "PUT" : "POST";
 
-    try {
-      let dataToSend = { ...form };
+  try {
+    let dataToSend = { ...form };
 
-      if (modoEdicion) {
-        delete dataToSend.stock_minimo;
-        delete dataToSend.stock_actual;
-        delete dataToSend.created_at;
-        delete dataToSend.updated_at;
-      } else {
-        delete dataToSend.id_producto;
-      }
-
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataToSend),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        mostrarMensaje("success", data.message || "Operación exitosa", data.details || "");
-        setForm({
-          id_producto: "",
-          codigo: "",
-          nombre: "",
-          descripcion: "",
-          categoria: "",
-          unidad: "",
-          stock_minimo: "",
-          stock_actual: "",
-        });
-        setModoEdicion(false);
-        setShowModal(false);
-        fetchProductos();
-      } else {
-        mostrarMensaje("danger", data.message || "Error en la operación", data.details || "");
-      }
-    } catch {
-      mostrarMensaje("danger", "Error de conexión con el servidor");
+    if (modoEdicion) {
+      delete dataToSend.stock_minimo;
+      delete dataToSend.stock_actual;
+      delete dataToSend.created_at;
+      delete dataToSend.updated_at;
+    } else {
+      delete dataToSend.id_producto;
     }
-  };
+
+    // 🔹 Validación de valores no permitidos
+    const invalidWords = ["null", "true", "false"];
+    for (const key in dataToSend) {
+      const value = String(dataToSend[key]).trim().toLowerCase();
+      if (invalidWords.includes(value)) {
+        mostrarMensaje(
+          "danger",
+          "Datos de entrada inválidos.",
+          `El campo "${key}" no puede contener valores como 'null', 'true' o 'false'.`
+        );
+        return;
+      }
+    }
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dataToSend),
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      mostrarMensaje("success", data.message || "Operación exitosa", data.details || "");
+      setForm({
+        id_producto: "",
+        codigo: "",
+        nombre: "",
+        descripcion: "",
+        categoria: "",
+        unidad: "",
+        stock_minimo: "",
+        stock_actual: "",
+      });
+      setModoEdicion(false);
+      setShowModal(false);
+      fetchProductos();
+    } else {
+      mostrarMensaje("danger", data.message || "Error en la operación", data.details || "");
+    }
+  } catch {
+    mostrarMensaje("danger", "Error de conexión con el servidor");
+  }
+};
 
   // 🔹 Eliminar producto
   const eliminarProducto = async (id) => {
@@ -351,12 +365,7 @@ export default function Productos() {
                 {/* Formulario */}
                 <form onSubmit={handleSubmit}>
                   <div className="modal-body row g-3">
-                    {modoEdicion && (
-                      <div className="col-md-2">
-                        <label className="form-label">ID</label>
-                        <input type="text" className="form-control" value={form.id_producto} disabled />
-                      </div>
-                    )}
+                 
                     <div className="col-md-3">
                       <label className="form-label">Código</label>
                       <input
