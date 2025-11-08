@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 export default function Productos() {
   const [productos, setProductos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [mensaje, setMensaje] = useState({ tipo: "", texto: "" });
+  const [mensaje, setMensaje] = useState({ tipo: "", texto: "", detalles: "" });
   const [form, setForm] = useState({
     id_producto: "",
     codigo: "",
@@ -26,10 +26,10 @@ export default function Productos() {
   const [filtroCodigo, setFiltroCodigo] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("");
 
-  // 🔹 Mostrar mensaje temporal
-  const mostrarMensaje = (tipo, texto) => {
-    setMensaje({ tipo, texto });
-    setTimeout(() => setMensaje({ tipo: "", texto: "" }), 4000);
+  // 🔹 Mostrar mensaje temporal con detalles opcionales
+  const mostrarMensaje = (tipo, texto, detalles = "") => {
+    setMensaje({ tipo, texto, detalles });
+    setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
   };
 
   // 🔹 Obtener productos
@@ -38,11 +38,10 @@ export default function Productos() {
     try {
       const res = await fetch(`${API_URL}/products`);
       const data = await res.json();
-
       if (res.ok) {
         setProductos(data.products || []);
       } else {
-        mostrarMensaje("danger", data.message || "Error al cargar productos");
+        mostrarMensaje("danger", data.message || "Error al cargar productos", data.details || "");
       }
     } catch {
       mostrarMensaje("danger", "Error de conexión con el servidor");
@@ -58,7 +57,6 @@ export default function Productos() {
   // 🔹 Crear o actualizar producto
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const url = modoEdicion
       ? `${API_URL}/products/update`
       : `${API_URL}/products/nuevo`;
@@ -85,7 +83,7 @@ export default function Productos() {
       const data = await res.json();
 
       if (res.ok) {
-        mostrarMensaje("success", data.message || "Operación exitosa");
+        mostrarMensaje("success", data.message || "Operación exitosa", data.details || "");
         setForm({
           id_producto: "",
           codigo: "",
@@ -100,7 +98,7 @@ export default function Productos() {
         setShowModal(false);
         fetchProductos();
       } else {
-        mostrarMensaje("danger", data.message || "Error en la operación");
+        mostrarMensaje("danger", data.message || "Error en la operación", data.details || "");
       }
     } catch {
       mostrarMensaje("danger", "Error de conexión con el servidor");
@@ -110,7 +108,6 @@ export default function Productos() {
   // 🔹 Eliminar producto
   const eliminarProducto = async (id) => {
     if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
-
     try {
       const res = await fetch(`${API_URL}/products/delete`, {
         method: "DELETE",
@@ -118,12 +115,11 @@ export default function Productos() {
         body: JSON.stringify({ id_producto: id }),
       });
       const data = await res.json();
-
       if (res.ok) {
-        mostrarMensaje("success", data.message || "Producto eliminado");
+        mostrarMensaje("success", data.message || "Producto eliminado", data.details || "");
         fetchProductos();
       } else {
-        mostrarMensaje("danger", data.message || "Error al eliminar producto");
+        mostrarMensaje("danger", data.message || "Error al eliminar producto", data.details || "");
       }
     } catch {
       mostrarMensaje("danger", "Error al conectar con el servidor");
@@ -146,16 +142,15 @@ export default function Productos() {
         body: JSON.stringify({ id_producto: id, activo: activo ? 0 : 1 }),
       });
       const data = await res.json();
-
       if (res.ok) {
-        mostrarMensaje("success", data.message || "Estado actualizado");
+        mostrarMensaje("success", data.message || "Estado actualizado", data.details || "");
         setProductos((prev) =>
           prev.map((p) =>
             p.id_producto === id ? { ...p, activo: activo ? 0 : 1 } : p
           )
         );
       } else {
-        mostrarMensaje("danger", data.message || "Error al actualizar estado");
+        mostrarMensaje("danger", data.message || "Error al actualizar estado", data.details || "");
       }
     } catch {
       mostrarMensaje("danger", "No se pudo conectar con el servidor");
@@ -172,9 +167,16 @@ export default function Productos() {
 
   return (
     <div className="container-fluid vh-100 d-flex flex-column p-4 bg-white overflow-auto">
+      {/* Mensaje superior */}
       {mensaje.texto && (
-        <div className={`alert alert-${mensaje.tipo} text-center fw-semibold`}>
-          {mensaje.texto}
+        <div
+          className={`alert alert-${mensaje.tipo} text-center fw-semibold alerta-superior`}
+          role="alert"
+        >
+          <div>{mensaje.texto}</div>
+          {mensaje.detalles && (
+            <div className="small mt-1 text-muted">{mensaje.detalles}</div>
+          )}
         </div>
       )}
 
@@ -202,11 +204,9 @@ export default function Productos() {
         </button>
       </div>
 
-      {/* Filtros individuales */}
+      {/* Filtros */}
       <div className="card mb-4 shadow-sm p-3">
-        <h6 className="fw-bold mb-3 text-secondary">
-          🔍 Filtros de búsqueda
-        </h6>
+        <h6 className="fw-bold mb-3 text-secondary">Filtros de búsqueda</h6>
         <div className="row g-3">
           <div className="col-md-4">
             <label className="form-label">Buscar por nombre</label>
@@ -218,7 +218,6 @@ export default function Productos() {
               onChange={(e) => setFiltroNombre(e.target.value)}
             />
           </div>
-
           <div className="col-md-4">
             <label className="form-label">Buscar por código</label>
             <input
@@ -229,7 +228,6 @@ export default function Productos() {
               onChange={(e) => setFiltroCodigo(e.target.value)}
             />
           </div>
-
           <div className="col-md-4">
             <label className="form-label">Buscar por categoría</label>
             <input
@@ -273,13 +271,7 @@ export default function Productos() {
                     <td>{p.nombre}</td>
                     <td>{p.categoria}</td>
                     <td>{p.unidad}</td>
-                    <td
-                      className={
-                        p.stock_actual < p.stock_minimo
-                          ? "text-danger fw-bold"
-                          : ""
-                      }
-                    >
+                    <td className={p.stock_actual < p.stock_minimo ? "text-danger fw-bold" : ""}>
                       {p.stock_actual}
                     </td>
                     <td>{p.stock_minimo}</td>
@@ -309,9 +301,7 @@ export default function Productos() {
                       >
                         <i
                           className={`bi ${
-                            p.activo
-                              ? "bi-toggle2-on text-success"
-                              : "bi-toggle2-off text-secondary"
+                            p.activo ? "bi-toggle2-on text-success" : "bi-toggle2-off text-secondary"
                           }`}
                         ></i>
                       </button>
@@ -336,6 +326,7 @@ export default function Productos() {
           <div className="modal fade show d-block" tabIndex="-1">
             <div className="modal-dialog modal-lg">
               <div className="modal-content">
+                {/* Encabezado */}
                 <div className="modal-header bg-primary text-white">
                   <h5 className="modal-title">
                     {modoEdicion ? "Editar Producto" : "Nuevo Producto"}
@@ -346,68 +337,62 @@ export default function Productos() {
                     onClick={() => setShowModal(false)}
                   ></button>
                 </div>
+
+                {/* Mensaje del backend */}
+                {mensaje.texto && (
+                  <div className={`alert alert-${mensaje.tipo} text-center fw-semibold m-3`}>
+                    <div>{mensaje.texto}</div>
+                    {mensaje.detalles && (
+                      <div className="small mt-1 text-muted">{mensaje.detalles}</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Formulario */}
                 <form onSubmit={handleSubmit}>
                   <div className="modal-body row g-3">
                     {modoEdicion && (
                       <div className="col-md-2">
                         <label className="form-label">ID</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          value={form.id_producto}
-                          disabled
-                        />
+                        <input type="text" className="form-control" value={form.id_producto} disabled />
                       </div>
                     )}
-
                     <div className="col-md-3">
                       <label className="form-label">Código</label>
                       <input
                         type="text"
                         className="form-control"
                         value={form.codigo}
-                        onChange={(e) =>
-                          setForm({ ...form, codigo: e.target.value })
-                        }
+                        onChange={(e) => setForm({ ...form, codigo: e.target.value })}
                       />
                     </div>
-
                     <div className="col-md-5">
                       <label className="form-label">Nombre</label>
                       <input
                         type="text"
                         className="form-control"
                         value={form.nombre}
-                        onChange={(e) =>
-                          setForm({ ...form, nombre: e.target.value })
-                        }
+                        onChange={(e) => setForm({ ...form, nombre: e.target.value })}
                       />
                     </div>
-
                     <div className="col-md-4">
                       <label className="form-label">Categoría</label>
                       <input
                         type="text"
                         className="form-control"
                         value={form.categoria}
-                        onChange={(e) =>
-                          setForm({ ...form, categoria: e.target.value })
-                        }
+                        onChange={(e) => setForm({ ...form, categoria: e.target.value })}
                       />
                     </div>
-
                     <div className="col-md-3">
                       <label className="form-label">Unidad</label>
                       <input
                         type="text"
                         className="form-control"
                         value={form.unidad}
-                        onChange={(e) =>
-                          setForm({ ...form, unidad: e.target.value })
-                        }
+                        onChange={(e) => setForm({ ...form, unidad: e.target.value })}
                       />
                     </div>
-
                     {!modoEdicion && (
                       <>
                         <div className="col-md-2">
@@ -416,53 +401,32 @@ export default function Productos() {
                             type="number"
                             className="form-control"
                             value={form.stock_minimo}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                stock_minimo: e.target.value,
-                              })
-                            }
+                            onChange={(e) => setForm({ ...form, stock_minimo: e.target.value })}
                           />
                         </div>
-
                         <div className="col-md-2">
                           <label className="form-label">Stock Actual</label>
                           <input
                             type="number"
                             className="form-control"
                             value={form.stock_actual}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                stock_actual: e.target.value,
-                              })
-                            }
+                            onChange={(e) => setForm({ ...form, stock_actual: e.target.value })}
                           />
                         </div>
                       </>
                     )}
-
                     <div className="col-md-12">
                       <label className="form-label">Descripción</label>
                       <textarea
                         className="form-control"
                         value={form.descripcion}
-                        onChange={(e) =>
-                          setForm({
-                            ...form,
-                            descripcion: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
                       ></textarea>
                     </div>
                   </div>
 
                   <div className="modal-footer">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => setShowModal(false)}
-                    >
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
                       Cerrar
                     </button>
                     <button type="submit" className="btn btn-success">

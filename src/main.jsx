@@ -7,6 +7,7 @@ import App from "./App.jsx";
 // Estilos de Bootstrap (tomados de la opción incoming)
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
 // Importación crítica de AuthProvider (tomada de la opción current)
 import { AuthProvider } from './auth/context/AuthContext.jsx';

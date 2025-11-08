@@ -66,3 +66,44 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* 🔹 Hace que los mensajes se vean sobre el modal */
+.alerta-superior {
+  position: fixed; /* se mantiene visible siempre */
+  top: 20px; /* distancia desde arriba */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000; /* mayor que el modal (1050) */
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+}
+
+/* Corrige el z-index del modal y del fondo */
+.modal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 1055 !important;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+/* Asegura que el backdrop cubra toda la pantalla */
+.modal-backdrop.show {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  z-index: 1050 !important;
+}
+
+/* Evita que el contenido de fondo se vea encima */
+.container-fluid {
+  position: relative;
+  z-index: 1;
+}
