@@ -4,6 +4,7 @@ import axios from 'axios';
 // Obtenemos la URL base de las variables de entorno de Vite
 // Esto garantiza que se use la URL correcta (dev o prod)
 const API_URL = import.meta.env.VITE_API_BASE_URL; 
+console.log('API_URL:', API_URL);
 
 /**
  * Llama al endpoint de login del servidor.
@@ -44,4 +45,15 @@ export const verifyCode = async (data) => {
   }
 };
 
-// Aquí podríamos añadir otras funciones como register, forgotPassword, etc.
+
+// src/api/authService.js
+export const createUser = async (userData) => {
+  try {
+    // CAMBIA ESTA LÍNEA - quita el /api/v1 extra
+    const response = await axios.post(`${API_URL}/usuarios/nuevo`, userData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creando usuario:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};

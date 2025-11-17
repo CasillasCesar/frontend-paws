@@ -1,6 +1,6 @@
 // src/auth/actions/authActions.js
 import { AuthActionTypes } from '../reducers/authReducers';
-import { login, verifyCode } from '../../api/authService';
+import { login, verifyCode, createUser} from '../../api/authService';
 import { saveToken, removeToken, saveUserData, removeUserData } from '../../utils/tokenUtils';
 import { toast } from 'react-toastify';
 
@@ -81,6 +81,27 @@ export const verifyCodeUser = async (dispatch, userId, code) => {
   } catch (error) {
     console.error('Error durante la verificación 2FA:', error);
     toast.error(error.message || "El código de verificación es incorrecto.", {
+      position: "bottom-center",
+    });
+    throw error;
+  }
+};
+
+// En src/auth/actions/authActions.js - función createUserAction actualizada
+export const createUserAction = async (dispatch, userData) => {
+  try {
+    const response = await createUser(userData);
+    
+    // Mostrar toast de éxito
+    toast.success(`✅ Usuario ${response.usuario.nombre} creado exitosamente!`, {
+      position: "top-center",
+      autoClose: 4000,
+    });
+
+    return response;
+
+  } catch (error) {
+    toast.error(error.message || "Error al crear el usuario", {
       position: "bottom-center",
     });
     throw error;
