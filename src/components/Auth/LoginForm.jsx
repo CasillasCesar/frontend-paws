@@ -2,17 +2,17 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
-import { loginUser } from '../../auth/actions/authActions'; 
+import { loginUser } from '../../auth/actions/authActions';
 
 
 export const LoginForm = () => {
   const { authState, dispatch } = useAuth();
-  
+
   // Estados para los campos del formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  
+
   const [isLoading, setIsLoading] = useState(false);
 
   // Manejador para el Paso 1 (Email/Password)
@@ -52,7 +52,7 @@ export const LoginForm = () => {
     return (
       <div className="login-form-container">
         <form onSubmit={handleVerifySubmit} className="login-form">
-          
+
           {/* ESTA ES LA LÓGICA QUE PIDES:
              Lee el método del estado y muestra el mensaje correcto.
           */}
@@ -82,12 +82,13 @@ export const LoginForm = () => {
               required
             />
           </div>
-          
+
           {/* --- CORRECCIÓN AQUÍ --- */}
           <button type="submit" className="submit-button" disabled={isLoading}>
             {isLoading ? 'Verificando...' : 'Verificar Código'}
           </button>
         </form>
+
       </div>
     );
   }
@@ -98,7 +99,7 @@ export const LoginForm = () => {
       <form onSubmit={handleLoginSubmit} className="login-form">
         <h2 className="form-title">Iniciar Sesión</h2>
         <p className="form-subtitle">Ingresa tus credenciales.</p>
-        
+
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input
@@ -109,7 +110,7 @@ export const LoginForm = () => {
             required
           />
         </div>
-        
+
         <div className="form-group">
           <label htmlFor="password">Contraseña</label>
           <input
@@ -120,10 +121,15 @@ export const LoginForm = () => {
             required
           />
         </div>
-        
+
         <button type="submit" className="submit-button" disabled={isLoading}>
           {isLoading ? 'Ingresando...' : 'Iniciar Sesión'}
         </button>
+        <div className="mt-3 text-center">
+          <a href="/change-password" className="text-decoration-none small text-muted">
+            Forgot Password?
+          </a>
+        </div>
       </form>
     </div>
   );

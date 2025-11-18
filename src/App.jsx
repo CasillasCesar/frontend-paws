@@ -16,6 +16,8 @@ import Clientes from './pages/Clientes/Clientes.jsx';
 import Usuarios from './pages/Usuarios/Usuarios.jsx';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { ResetPasswordRequest } from "./components/Auth/ResetPassword.jsx";
+
 // Componente de inicio MEJORADO que ocupa toda la pantalla
 const Inicio = ({ user }) => (
   <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
@@ -186,6 +188,16 @@ export default function App() {
               element={
                 <GuestRoute>
                   <LoginForm />
+                </GuestRoute>
+              }
+            />
+
+            {/* nueva ruta */}
+            <Route
+              path="/change-password"
+              element={
+                <GuestRoute>
+                  <ResetPasswordRequest />
                 </GuestRoute>
               }
             />

@@ -3,8 +3,10 @@ import axios from 'axios';
 
 // Obtenemos la URL base de las variables de entorno de Vite
 // Esto garantiza que se use la URL correcta (dev o prod)
-const API_URL = import.meta.env.VITE_API_BASE_URL; 
+const API_URL = import.meta.env.VITE_API_BASE_URLPAUSADA; 
+const api = axios.create({ baseURL: import.meta.env.VITE_API_BASE_URLPAUSADA });
 console.log('API_URL:', API_URL);
+
 
 /**
  * Llama al endpoint de login del servidor.
@@ -56,4 +58,31 @@ export const createUser = async (userData) => {
     console.error("Error creando usuario:", error.response?.data || error.message);
     throw error.response?.data || error.message;
   }
+};
+
+// Función para manejar errores de Axios y extraer el mensaje del backend
+const handleAxiosError = (error) => {
+    // Si la respuesta existe, usa el mensaje proporcionado por el backend
+    if (error.response && error.response.data && error.response.data.message) {
+        return new Error(error.response.data.message);
+    }
+    // Si no hay respuesta del backend (ej: error de red), usa un mensaje genérico
+    return new Error("Error de conexión con el servidor. Por favor, intenta más tarde.");
+};
+
+/**
+ * Realiza la llamada HTTP al backend para solicitar un enlace de restablecimiento.
+ * Endpoint: POST /forgot-password
+ * Payload enviado: { "email": "valor_de_email" }
+ * @param {string} email - Correo electrónico del usuario.
+ * @returns {object} - Mensaje de éxito del servidor.
+ */
+export const requestPasswordReset = async (email) => {
+    try {
+        // Axios envía { email } como el cuerpo JSON, cumpliendo con tu requerimiento.
+        const response = await api.post('/forgot-password', { email });
+        return response.data;
+    } catch (error) {
+        throw handleAxiosError(error);
+    }
 };
