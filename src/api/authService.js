@@ -86,3 +86,21 @@ export const requestPasswordReset = async (email) => {
         throw handleAxiosError(error);
     }
 };
+
+/**
+ * Realiza la llamada HTTP al backend para confirmar el restablecimiento de contraseña.
+ * Endpoint: POST /reset-password/{token}
+ * Payload enviado: { "newPassword": "valor_de_newPassword" }
+ * @param {string} token - Token de restablecimiento recibido por correo.
+ * @param {string} newPassword - La nueva contraseña elegida por el usuario.
+ * @returns {object} - Mensaje de éxito del servidor.
+ */
+export const resetPassword = async (token, newPassword) => {
+    try {
+        // [IMPLEMENTACIÓN CLAVE] La URL incluye el token en el path. El body solo lleva newPassword.
+        const response = await api.post(`/reset-password/${token}`, { newPassword });
+        return response.data;
+    } catch (error) {
+        throw handleAxiosError(error);
+    }
+};
