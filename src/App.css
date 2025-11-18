@@ -1,11 +1,10 @@
 #root {
-  /* Elimina o aumenta el max-width */
-  max-width: none; /* o un valor más grande como 1920px */
-  margin: 0 auto;
-  padding: 1rem; /* Reduce el padding en móviles */
-  text-align: center;
-  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 !important;   /* ← AQUÍ ESTÁ LA MAGIA */
+  width: 100vw !important; /* Fuerza a usar toda la pantalla */
   min-height: 100vh;
+  text-align: center;
 }
 
 .logo {
