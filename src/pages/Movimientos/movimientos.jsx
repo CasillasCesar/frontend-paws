@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+// Toast importation
+import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -28,8 +30,19 @@ export default function Movimientos() {
   const [filtroReferencia, setFiltroReferencia] = useState("");
 
   const mostrarMensaje = (tipo, texto, detalles = "") => {
-    setMensaje({ tipo, texto, detalles });
-    setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
+    switch (tipo) {
+      case "warning":
+        toast.info(texto, { position: "top-center", autoClose: 5000 })
+        break;
+      case "danger":
+        toast.error(texto, { position: "top-center", autoClose: 5000 })
+        break;
+      case "success":
+        toast.success(texto, { position: "top-center", autoClose: 5000 })
+        break;
+    }
+    // setMensaje({ tipo, texto, detalles });
+    // setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
   };
 
   // Obtener historial
@@ -68,6 +81,12 @@ export default function Movimientos() {
     if (!form.id_usuario) {
       mostrarMensaje("danger", "Debes especificar el ID del usuario responsable");
       return;
+    }
+
+    if (form.tipo === "Entrada") {
+      delete form.id_cliente
+    } else {
+      delete form.id_proveedor
     }
 
     try {
@@ -142,6 +161,7 @@ export default function Movimientos() {
         <div className="d-flex gap-2">
           <input
             type="number"
+            min="1"
             className="form-control"
             placeholder="ID del producto"
             value={form.id_producto}
@@ -159,13 +179,22 @@ export default function Movimientos() {
         <div className="row g-3">
           <div className="col-md-4">
             <label className="form-label">Tipo</label>
-            <input
+            <select
+              className="form-select"
+              value={filtroTipo}
+              onChange={(e) => setFiltroTipo(e.target.value)}
+            >
+              <option value=""></option>
+              <option value="Entrada">Entrada</option>
+              <option value="Salida">Salida</option>
+            </select>
+            {/* <input
               type="text"
               className="form-control"
               placeholder="Entrada / Salida"
               value={filtroTipo}
               onChange={(e) => setFiltroTipo(e.target.value)}
-            />
+            /> */}
           </div>
           <div className="col-md-4">
             <label className="form-label">Responsable</label>
@@ -265,6 +294,7 @@ export default function Movimientos() {
                       <label className="form-label">ID Producto</label>
                       <input
                         type="number"
+                        min="1"
                         className="form-control"
                         value={form.id_producto}
                         onChange={(e) => setForm({ ...form, id_producto: e.target.value })}
@@ -275,6 +305,7 @@ export default function Movimientos() {
                       <label className="form-label">Cantidad</label>
                       <input
                         type="number"
+                        min="1"
                         className="form-control"
                         value={form.cantidad}
                         onChange={(e) => setForm({ ...form, cantidad: e.target.value })}
@@ -286,6 +317,7 @@ export default function Movimientos() {
                         <label className="form-label">ID Proveedor</label>
                         <input
                           type="number"
+                          min="1"
                           className="form-control"
                           value={form.id_proveedor}
                           onChange={(e) => setForm({ ...form, id_proveedor: e.target.value })}
@@ -298,6 +330,7 @@ export default function Movimientos() {
                         <label className="form-label">ID Cliente</label>
                         <input
                           type="number"
+                          min="1"
                           className="form-control"
                           value={form.id_cliente}
                           onChange={(e) => setForm({ ...form, id_cliente: e.target.value })}
@@ -309,6 +342,7 @@ export default function Movimientos() {
                       <label className="form-label">ID Usuario (responsable)</label>
                       <input
                         type="number"
+                        min="1"
                         className="form-control"
                         value={form.id_usuario}
                         onChange={(e) => setForm({ ...form, id_usuario: e.target.value })}
