@@ -15,11 +15,11 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(true);
 
   const [form, setForm] = useState({
-    id_usuario: "",
+    id: "",
     nombre: "",
     rol: "",
     correo: "",
-    password: "",
+    // password: "",
   });
 
   const [showModal, setShowModal] = useState(false);
@@ -99,17 +99,19 @@ export default function Usuarios() {
   // Modal editar
   const editarUsuario = (u) => {
     setForm({
-      id_usuario: u.id,
+      id: u.id,
       nombre: u.nombre,
       rol: u.rol,
-      correo: u.email,
-      password: "",
+      email: u.email,
+      // password: "",
     });
     setShowModal(true);
   };
 
   // Actualizar usuario
   const actualizarUsuario = async () => {
+    console.log(form);
+    
     try {
       const res = await fetch(`${API_URL}/usuarios/update`, {
         method: "PUT",
@@ -321,9 +323,9 @@ export default function Usuarios() {
                   <label className="form-label">Correo</label>
                   <input
                     className="form-control"
-                    value={form.correo}
+                    value={form.email}
                     onChange={(e) =>
-                      setForm({ ...form, correo: e.target.value })
+                      setForm({ ...form, email: e.target.value })
                     }
                   />
                 </div>
