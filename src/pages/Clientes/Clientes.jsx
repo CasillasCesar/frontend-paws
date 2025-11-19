@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-
+// Toast importation
+import { toast } from "react-toastify";
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Clientes() {
@@ -25,8 +26,19 @@ export default function Clientes() {
 
   // Mostrar mensaje temporal
   const mostrarMensaje = (tipo, texto, detalles = "") => {
-    setMensaje({ tipo, texto, detalles });
-    setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
+    switch (tipo) {
+          case "warning":
+            toast.info(texto,{position:"top-center",autoClose:5000})
+            break;
+          case "danger":
+            toast.error(texto,{position:"top-center",autoClose:5000})
+            break;
+          case "success":
+            toast.success(texto,{position:"top-center",autoClose:5000})
+            break;
+        }
+    // setMensaje({ tipo, texto, detalles });
+    // setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
   };
 
   // Obtener clientes
@@ -62,6 +74,9 @@ export default function Clientes() {
 
     const method = modoEdicion ? "PUT" : "POST";
 
+    if(!modoEdicion)
+      delete form.id_cliente
+
     try {
       const res = await fetch(url, {
         method,
@@ -72,6 +87,7 @@ export default function Clientes() {
       const data = await res.json();
 
       if (res.ok) {
+        
         mostrarMensaje("success", modoEdicion ? "Cliente actualizado" : "Cliente creado");
         setShowModal(false);
         setForm({ id_cliente: "", nombre: "", telefono: "", contacto: "" });
@@ -173,6 +189,8 @@ export default function Clientes() {
               className="form-control"
               value={filtroTelefono}
               onChange={(e) => setFiltroTelefono(e.target.value)}
+              minLength={8}
+              maxLength={8}
             />
           </div>
         </div>
@@ -271,6 +289,8 @@ export default function Clientes() {
                         className="form-control"
                         value={form.telefono}
                         onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+                        minLength={8}
+                        maxLength={8}
                       />
                     </div>
 
