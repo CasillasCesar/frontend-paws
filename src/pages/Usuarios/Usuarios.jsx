@@ -15,10 +15,10 @@ export default function Usuarios() {
   const [form, setForm] = useState({
     id_usuario: "",
     nombre: "",
-    usuario: "",
+    // usuario: "",
     rol: "",
     correo: "",
-    telefono: "",
+    // telefono: "",
     password: "",
   });
 
@@ -27,12 +27,23 @@ export default function Usuarios() {
   // Filtros
   const [filtroId, setFiltroId] = useState("");
   const [filtroNombre, setFiltroNombre] = useState("");
-  const [filtroUsuario, setFiltroUsuario] = useState("");
+  // const [filtroUsuario, setFiltroUsuario] = useState(""); 
   const [filtroRol, setFiltroRol] = useState("");
 
   const mostrarMensaje = (tipo, texto, detalles = "") => {
-    setMensaje({ tipo, texto, detalles });
-    setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
+    switch (tipo) {
+      case "warning":
+        toast.info(texto, { position: "top-center", autoClose: 5000 })
+        break;
+      case "danger":
+        toast.error(texto, { position: "top-center", autoClose: 5000 })
+        break;
+      case "success":
+        toast.success(texto, { position: "top-center", autoClose: 5000 })
+        break;
+    }
+    // setMensaje({ tipo, texto, detalles });
+    // setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
   };
 
   // Obtener usuarios
@@ -44,7 +55,7 @@ export default function Usuarios() {
 
       if (filtroId) filtros.id = Number(filtroId);
       if (filtroNombre) filtros.nombre = filtroNombre;
-      if (filtroUsuario) filtros.usuario = filtroUsuario;
+      // if (filtroUsuario) filtros.usuario = filtroUsuario;
       if (filtroRol) filtros.rol = filtroRol;
 
       const res = await fetch(`${API_URL}/usuarios/`, {
@@ -79,7 +90,7 @@ export default function Usuarios() {
       usuario: u.usuario,
       rol: u.rol,
       correo: u.email,
-      telefono: u.telefono,
+      // telefono: u.telefono,
       password: "",
     });
     setShowModal(true);
@@ -163,7 +174,7 @@ export default function Usuarios() {
       <div className="card p-3 shadow-sm mb-4">
         <h6 className="fw-bold mb-3 text-secondary">Filtros</h6>
         <div className="row g-3">
-          <div className="col-md-3">
+          <div className="col-md-4">
             <label className="form-label">ID</label>
             <input
               className="form-control"
@@ -176,7 +187,7 @@ export default function Usuarios() {
             />
           </div>
 
-          <div className="col-md-3">
+          <div className="col-md-4">
             <label className="form-label">Nombre</label>
             <input
               className="form-control"
@@ -185,22 +196,31 @@ export default function Usuarios() {
             />
           </div>
 
-          <div className="col-md-3">
+          {/* <div className="col-md-3">
             <label className="form-label">Usuario</label>
             <input
               className="form-control"
               value={filtroUsuario}
               onChange={(e) => setFiltroUsuario(e.target.value)}
             />
-          </div>
+          </div> */}
 
-          <div className="col-md-3">
+          <div className="col-md-4">
             <label className="form-label">Rol</label>
-            <input
+            {/* <input
               className="form-control"
               value={filtroRol}
               onChange={(e) => setFiltroRol(e.target.value)}
-            />
+            /> */}
+            <select
+              className="form-control"
+              value={filtroRol}
+              onChange={(e) => setFiltroRol(e.target.value)}
+            >
+              <option value=""></option>
+              <option value="Empleado">Empleado</option>
+              <option value="Administrador">Administrador</option>
+            </select>
           </div>
 
           <div className="col-12 text-end mt-3">
@@ -222,11 +242,11 @@ export default function Usuarios() {
             <thead className="table-primary">
               <tr>
                 <th>ID</th>
-                <th>Usuario</th>
+                {/* <th>Usuario</th> */}
                 <th>Nombre</th>
                 <th>Rol</th>
                 <th>Correo</th>
-                <th>Teléfono</th>
+                {/* <th>Teléfono</th> */}
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -236,11 +256,11 @@ export default function Usuarios() {
                 usuarios.map((u) => (
                   <tr key={u.id}>
                     <td>{u.id}</td>
-                    <td>{u.usuario}</td>
+                    {/* <td>{u.usuario}</td> */}
                     <td>{u.nombre}</td>
                     <td>{u.rol}</td>
                     <td>{u.email}</td>
-                    <td>{u.telefono}</td>
+                    {/* <td>{u.telefono}</td> */}
 
                     <td>
                       <button
@@ -288,7 +308,7 @@ export default function Usuarios() {
 
             <div className="modal-body">
               <div className="row g-3">
-                <div className="col-md-6">
+                <div className="col-md-12">
                   <label className="form-label">Nombre</label>
                   <input
                     className="form-control"
@@ -299,7 +319,7 @@ export default function Usuarios() {
                   />
                 </div>
 
-                <div className="col-md-6">
+                {/* <div className="col-md-6">
                   <label className="form-label">Usuario</label>
                   <input
                     className="form-control"
@@ -308,7 +328,7 @@ export default function Usuarios() {
                       setForm({ ...form, usuario: e.target.value })
                     }
                   />
-                </div>
+                </div> */}
 
                 <div className="col-md-6">
                   <label className="form-label">Correo</label>
@@ -321,7 +341,7 @@ export default function Usuarios() {
                   />
                 </div>
 
-                <div className="col-md-6">
+                {/* <div className="col-md-6">
                   <label className="form-label">Teléfono</label>
                   <input
                     className="form-control"
@@ -329,19 +349,25 @@ export default function Usuarios() {
                     onChange={(e) =>
                       setForm({ ...form, telefono: e.target.value })
                     }
+                    minLength={8}
+                    maxLength={8}
                   />
-                </div>
+                </div> */}
 
                 <div className="col-md-6">
                   <label className="form-label">Rol</label>
-                  <input
+
+                  <select
                     className="form-control"
                     value={form.rol}
                     onChange={(e) => setForm({ ...form, rol: e.target.value })}
-                  />
+                  >
+                    <option value="Empleado">Empleado</option>
+                    <option value="Administrador">Administrador</option>
+                  </select>
                 </div>
 
-                <div className="col-md-6">
+                {/* <div className="col-md-6">
                   <label className="form-label">Contraseña</label>
                   <input
                     type="password"
@@ -351,7 +377,7 @@ export default function Usuarios() {
                       setForm({ ...form, password: e.target.value })
                     }
                   />
-                </div>
+                </div> */}
               </div>
             </div>
 
