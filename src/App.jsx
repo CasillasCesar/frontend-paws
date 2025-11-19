@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from "react-router-dom";
 import NavbarApp from "./pages/Navbar/NavbarApp.jsx";
 import Productos from "./pages/Productos/productos.jsx";
 import CreateUserForm from './pages/CreateUser/CreateUserForm.jsx';
@@ -27,27 +27,27 @@ const Inicio = ({ user }) => (
       <div className="mb-4">
         <i className="bi bi-shop display-1 text-primary"></i>
       </div>
-      
+
       {/* Título principal */}
       <h1 className="display-4 fw-bold text-dark mb-3">
         Bienvenido a <span className="text-primary">Frescos</span>
       </h1>
-      
+
       {/* Saludo personalizado */}
       <h2 className="h3 text-muted mb-4">
         {user?.nombre ? `¡Hola, ${user.nombre}!` : '¡Bienvenido!'}
       </h2>
-      
+
       {/* Descripción */}
       <p className="lead text-muted mb-5 max-w-2xl mx-auto">
-        Gestiona tu inventario de manera eficiente. 
-        Accede a las opciones del menú para comenzar a administrar productos, 
+        Gestiona tu inventario de manera eficiente.
+        Accede a las opciones del menú para comenzar a administrar productos,
         usuarios y mucho más.
       </p>
 
       {/* Información del usuario si está logueado */}
       {user && (
-        <div className="alert alert-info mx-auto mb-4" style={{maxWidth: '500px'}}>
+        <div className="alert alert-info mx-auto mb-4" style={{ maxWidth: '500px' }}>
           <div className="d-flex align-items-center justify-content-center">
             <i className="bi bi-person-check me-2"></i>
             <span>
@@ -67,13 +67,14 @@ const Inicio = ({ user }) => (
               <p className="card-text text-muted">
                 Administra tu inventario, consulta stock y revisa alertas.
               </p>
-              <a href="/productos" className="btn btn-primary mt-3">
+              {/* <Link to="/productos" className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg shadow-md hover:bg-indigo-700 transition"> */}
+              <Link to="/productos" className="btn btn-primary mt-3">
                 Ir a Productos
-              </a>
+              </Link>
             </div>
           </div>
         </div>
-        
+
         <div className="col-md-4">
           <div className="card h-100 border-0 shadow-sm hover-card">
             <div className="card-body text-center p-4">
@@ -82,14 +83,14 @@ const Inicio = ({ user }) => (
               <p className="card-text text-muted">
                 Crea y administra usuarios del sistema con diferentes roles.
               </p>
-              <a href="/crearUsuario" className="btn btn-success mt-3">
+              <Link to="/crearUsuario" className="btn btn-success mt-3">
                 Crear Usuario
-              </a>
+              </Link>
             </div>
           </div>
         </div>
-        
-        <div className="col-md-4">
+
+        {/* <div className="col-md-4">
           <div className="card h-100 border-0 shadow-sm hover-card">
             <div className="card-body text-center p-4">
               <i className="bi bi-graph-up display-6 text-info mb-3"></i>
@@ -102,7 +103,7 @@ const Inicio = ({ user }) => (
               </a>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Footer de la página de inicio */}
