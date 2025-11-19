@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+// Toast importation
+import { toast } from "react-toastify";
 
 const API_URL = "https://backend-paws.onrender.com/api/v1";
 

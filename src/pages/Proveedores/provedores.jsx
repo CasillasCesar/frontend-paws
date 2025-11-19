@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
+// Toast importation
+import { toast } from "react-toastify";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -22,8 +24,19 @@ export default function Proveedores() {
   const [filtroTelefono, setFiltroTelefono] = useState("");
 
   const mostrarMensaje = (tipo, texto, detalles = "") => {
-    setMensaje({ tipo, texto, detalles });
-    setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
+    switch (tipo) {
+          case "warning":
+            toast.info(texto, { position: "top-center", autoClose: 5000 })
+            break;
+          case "danger":
+            toast.error(texto, { position: "top-center", autoClose: 5000 })
+            break;
+          case "success":
+            toast.success(texto, { position: "top-center", autoClose: 5000 })
+            break;
+        }
+    // setMensaje({ tipo, texto, detalles });
+    // setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
   };
 
   // 🔹 Obtener proveedores
