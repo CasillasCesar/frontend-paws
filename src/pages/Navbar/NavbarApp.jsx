@@ -8,6 +8,10 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 
 export default function NavbarApp() {
   const { authState, dispatch } = useAuth();
+  const isAuthenticated = authState.isAuthenticated
+  const userRole = authState?.user?.rol
+
+  const isAdministrator = isAuthenticated && userRole === "Administrador";
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -55,47 +59,49 @@ export default function NavbarApp() {
               </Link>
             </li>
 
-            <li className="nav-item mx-2">
-              <Link className="nav-link fw-semibold d-flex align-items-center" to="/proveedores">
-                <i className="bi bi-truck me-2"></i>
-                Proveedores
-              </Link>
-            </li>
+            {isAdministrator &&
+              <li className="nav-item mx-2">
+                <Link className="nav-link fw-semibold d-flex align-items-center" to="/proveedores">
+                  <i className="bi bi-truck me-2"></i>
+                  Proveedores
+                </Link>
+              </li>}
 
-            <li className="nav-item mx-2">
+
+            {isAuthenticated && <li className="nav-item mx-2">
               <Link className="nav-link fw-semibold d-flex align-items-center" to="/movimientos">
                 <i className="bi bi-arrow-left-right me-2"></i>
                 Movimientos
               </Link>
-            </li>
+            </li>}
 
-            <li className="nav-item mx-2">
+            {isAdministrator && <li className="nav-item mx-2">
               <Link className="nav-link fw-semibold d-flex align-items-center" to="/clientes">
                 <i className="bi bi-people me-2"></i>
                 Clientes
               </Link>
-            </li>
+            </li>}
 
-            <li className="nav-item mx-2">
+            {isAdministrator && <li className="nav-item mx-2">
               <Link className="nav-link fw-semibold d-flex align-items-center" to="/GestorUsuarios">
                 <i className="bi bi-person-gear me-2"></i>
                 Gestión Usuarios
               </Link>
-            </li>
+            </li>}
 
-            <li className="nav-item mx-2">
+            {isAdministrator && <li className="nav-item mx-2">
               <Link className="nav-link fw-semibold d-flex align-items-center" to="/productos">
                 <i className="bi bi-bag-check me-2"></i>
                 Productos
               </Link>
-            </li>
+            </li>}
 
-            <li className="nav-item mx-2">
+            {isAdministrator && <li className="nav-item mx-2">
               <Link className="nav-link fw-semibold d-flex align-items-center" to="/crearUsuario">
                 <i className="bi bi-person-plus me-2"></i>
                 Crear Usuario
               </Link>
-            </li>
+            </li>}
           </ul>
 
           {/* Botón login/logout */}

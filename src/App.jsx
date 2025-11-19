@@ -9,6 +9,7 @@ import { LoginForm } from './components/Auth/LoginForm';
 import { VerificationForm } from './components/Auth/VerificationForm';
 import { ProtectedRoute } from "./components/Auth/ProtectedRoute.jsx";
 import { GuestRoute } from "./components/Auth/GuestRoute.jsx";
+import { AdminRoute } from "./components/Auth/AdminRoute.jsx";
 import Proveedores from "./pages/Proveedores/provedores.jsx"
 import Movimientos from './pages/Movimientos/movimientos.jsx';
 import { ToastContainer } from "react-toastify";
@@ -219,12 +220,12 @@ export default function App() {
                   <Routes>
                     <Route path="/" element={<Inicio user={authState.user} />} />
                     <Route path="/dashboard" element={<Dashboard user={authState.user} handleLogout={handleLogout} />} />
-                    <Route path="/productos" element={<Productos />} />
-                    <Route path="/proveedores" element={<Proveedores />} />
+                    <Route path="/productos" element={<AdminRoute><Productos /></AdminRoute>} />
+                    <Route path="/proveedores" element={<AdminRoute><Proveedores /></AdminRoute>} />
                     <Route path="/movimientos" element={<Movimientos />} />
-                    <Route path="/GestorUsuarios" element={<Usuarios />} />
-                    <Route path="/clientes" element={<Clientes />} />
-                    <Route path="/crearUsuario" element={<CreateUserForm />} />
+                    <Route path="/GestorUsuarios" element={<AdminRoute><Usuarios /></AdminRoute>} />
+                    <Route path="/clientes" element={<AdminRoute><Clientes /></AdminRoute>} />
+                    <Route path="/crearUsuario" element={<AdminRoute><CreateUserForm /></AdminRoute>} />
                     <Route path="/login" element={<Navigate to="/" replace />} />
                   </Routes>
                 </ProtectedRoute>
