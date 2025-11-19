@@ -3,6 +3,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 // Toast importation
 import { toast } from "react-toastify";
+// IMport
+import { Modal, Button } from "react-bootstrap";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Clientes() {
@@ -20,6 +23,9 @@ export default function Clientes() {
   const [modoEdicion, setModoEdicion] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Visibilidad del modal de confirmación
+  const [idToDelete, setIdToDelete] = useState(null); // ID del cliente a eliminar
+
   // Filtros
   const [filtroNombre, setFiltroNombre] = useState("");
   const [filtroTelefono, setFiltroTelefono] = useState("");
@@ -27,16 +33,16 @@ export default function Clientes() {
   // Mostrar mensaje temporal
   const mostrarMensaje = (tipo, texto, detalles = "") => {
     switch (tipo) {
-          case "warning":
-            toast.info(texto,{position:"top-center",autoClose:5000})
-            break;
-          case "danger":
-            toast.error(texto,{position:"top-center",autoClose:5000})
-            break;
-          case "success":
-            toast.success(texto,{position:"top-center",autoClose:5000})
-            break;
-        }
+      case "warning":
+        toast.info(texto, { position: "top-center", autoClose: 5000 })
+        break;
+      case "danger":
+        toast.error(texto, { position: "top-center", autoClose: 5000 })
+        break;
+      case "success":
+        toast.success(texto, { position: "top-center", autoClose: 5000 })
+        break;
+    }
     // setMensaje({ tipo, texto, detalles });
     // setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
   };
@@ -74,7 +80,7 @@ export default function Clientes() {
 
     const method = modoEdicion ? "PUT" : "POST";
 
-    if(!modoEdicion)
+    if (!modoEdicion)
       delete form.id_cliente
 
     try {
@@ -87,7 +93,7 @@ export default function Clientes() {
       const data = await res.json();
 
       if (res.ok) {
-        
+
         mostrarMensaje("success", modoEdicion ? "Cliente actualizado" : "Cliente creado");
         setShowModal(false);
         setForm({ id_cliente: "", nombre: "", telefono: "", contacto: "" });
@@ -109,8 +115,42 @@ export default function Clientes() {
   };
 
   // Eliminar
-  const eliminarCliente = async (id) => {
-    if (!confirm("¿Deseas eliminar este cliente?")) return;
+  // const eliminarCliente = async (id) => {
+  //   if (!confirm("¿Deseas eliminar este cliente?")) return;
+
+  //   try {
+  //     const res = await fetch(`${API_URL}/clientes/delete`, {
+  //       method: "DELETE",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ id_cliente: id }),
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (res.ok) {
+  //       mostrarMensaje("success", "Cliente eliminado correctamente");
+  //       fetchClientes();
+  //     } else {
+  //       mostrarMensaje("danger", data.message);
+  //     }
+  //   } catch {
+  //     mostrarMensaje("danger", "No se pudo conectar con el servidor");
+  //   }
+  // };
+  // Iniciar el flujo de confirmación para eliminar
+  const solicitarConfirmacionEliminar = (id) => {
+    setIdToDelete(id); // Guarda el ID temporalmente
+    setShowDeleteConfirm(true); // Muestra el nuevo modal
+  };
+  // Eliminar (Lógica real que se ejecuta al confirmar en el modal)
+  const ejecutarEliminacion = async () => {
+    const id = idToDelete; // Usamos el ID guardado
+
+    // 1. Cerrar el modal inmediatamente y limpiar el ID
+    setShowDeleteConfirm(false);
+    setIdToDelete(null);
+
+    if (!id) return; // Seguridad extra
 
     try {
       const res = await fetch(`${API_URL}/clientes/delete`, {
@@ -233,7 +273,7 @@ export default function Clientes() {
 
                       <button
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => eliminarCliente(c.id_cliente)}
+                        onClick={() => solicitarConfirmacionEliminar(c.id_cliente)}
                       >
                         <i className="bi bi-trash"></i>
                       </button>
@@ -323,6 +363,30 @@ export default function Clientes() {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
+
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
+      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} backdrop="static" keyboard={false}>
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <p>¿Estás seguro de que deseas eliminar al cliente con ID <strong>{idToDelete}</strong>? Esta acción no se puede deshacer.</p>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            onClick={ejecutarEliminacion}
+            disabled={!idToDelete}
+          >
+            <i className="bi bi-trash me-2"></i>Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

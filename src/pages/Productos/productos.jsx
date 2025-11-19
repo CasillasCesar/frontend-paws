@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
+// IMport
+import { Modal, Button } from "react-bootstrap";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function Productos() {
@@ -20,6 +23,10 @@ export default function Productos() {
   });
   const [modoEdicion, setModoEdicion] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  // NUEVOS ESTADOS para el Modal de Confirmación de ELIMINACIÓN
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [idToDelete, setIdToDelete] = useState(null);
 
   // 🔹 Filtros individuales
   const [filtroNombre, setFiltroNombre] = useState("");
@@ -55,80 +62,107 @@ export default function Productos() {
   }, []);
 
   // 🔹 Crear o actualizar producto
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  const url = modoEdicion
-    ? `${API_URL}/products/update`
-    : `${API_URL}/products/nuevo`;
-  const method = modoEdicion ? "PUT" : "POST";
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const url = modoEdicion
+      ? `${API_URL}/products/update`
+      : `${API_URL}/products/nuevo`;
+    const method = modoEdicion ? "PUT" : "POST";
 
-  try {
-    let dataToSend = { ...form };
+    try {
+      let dataToSend = { ...form };
 
-    if (modoEdicion) {
-      delete dataToSend.stock_minimo;
-      delete dataToSend.stock_actual;
-      delete dataToSend.created_at;
-      delete dataToSend.updated_at;
-    } else {
-      delete dataToSend.id_producto;
-    }
-
-    // 🔹 Validación de valores no permitidos
-    const invalidWords = ["null", "true", "false"];
-    for (const key in dataToSend) {
-      const value = String(dataToSend[key]).trim().toLowerCase();
-      if (invalidWords.includes(value)) {
-        mostrarMensaje(
-          "danger",
-          "Datos de entrada inválidos.",
-          `El campo "${key}" no puede contener valores como 'null', 'true' o 'false'.`
-        );
-        return;
+      if (modoEdicion) {
+        delete dataToSend.stock_minimo;
+        delete dataToSend.stock_actual;
+        delete dataToSend.created_at;
+        delete dataToSend.updated_at;
+      } else {
+        delete dataToSend.id_producto;
       }
-    }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dataToSend),
-    });
+      // 🔹 Validación de valores no permitidos
+      const invalidWords = ["null", "true", "false"];
+      for (const key in dataToSend) {
+        const value = String(dataToSend[key]).trim().toLowerCase();
+        if (invalidWords.includes(value)) {
+          mostrarMensaje(
+            "danger",
+            "Datos de entrada inválidos.",
+            `El campo "${key}" no puede contener valores como 'null', 'true' o 'false'.`
+          );
+          return;
+        }
+      }
 
-    const data = await res.json();
-
-    if (res.ok) {
-      mostrarMensaje("success", data.message || "Operación exitosa", data.details || "");
-      setForm({
-        id_producto: "",
-        codigo: "",
-        nombre: "",
-        descripcion: "",
-        categoria: "",
-        unidad: "",
-        stock_minimo: "",
-        stock_actual: "",
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dataToSend),
       });
-      setModoEdicion(false);
-      setShowModal(false);
-      fetchProductos();
-    } else {
-      mostrarMensaje("danger", data.message || "Error en la operación", data.details || "");
+
+      const data = await res.json();
+
+      if (res.ok) {
+        mostrarMensaje("success", data.message || "Operación exitosa", data.details || "");
+        setForm({
+          id_producto: "",
+          codigo: "",
+          nombre: "",
+          descripcion: "",
+          categoria: "",
+          unidad: "",
+          stock_minimo: "",
+          stock_actual: "",
+        });
+        setModoEdicion(false);
+        setShowModal(false);
+        fetchProductos();
+      } else {
+        mostrarMensaje("danger", data.message || "Error en la operación", data.details || "");
+      }
+    } catch {
+      mostrarMensaje("danger", "Error de conexión con el servidor");
     }
-  } catch {
-    mostrarMensaje("danger", "Error de conexión con el servidor");
-  }
-};
+  };
 
   // 🔹 Eliminar producto
-  const eliminarProducto = async (id) => {
-    if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+  // const eliminarProducto = async (id) => {
+  //   if (!confirm("¿Seguro que deseas eliminar este producto?")) return;
+  //   try {
+  //     const res = await fetch(`${API_URL}/products/delete`, {
+  //       method: "DELETE",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ id_producto: id }),
+  //     });
+  //     const data = await res.json();
+  //     if (res.ok) {
+  //       mostrarMensaje("success", data.message || "Producto eliminado", data.details || "");
+  //       fetchProductos();
+  //     } else {
+  //       mostrarMensaje("danger", data.message || "Error al eliminar producto", data.details || "");
+  //     }
+  //   } catch {
+  //     mostrarMensaje("danger", "Error al conectar con el servidor");
+  //   }
+  // };
+  const confirmarEliminacion = (id) => {
+    setIdToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirmation = async () => {
+    setShowDeleteConfirm(false); // Cierra el modal de confirmación
+    if (!idToDelete) return;
+
     try {
       const res = await fetch(`${API_URL}/products/delete`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_producto: id }),
+        body: JSON.stringify({ id_producto: idToDelete }),
       });
       const data = await res.json();
+
       if (res.ok) {
         mostrarMensaje("success", data.message || "Producto eliminado", data.details || "");
         fetchProductos();
@@ -137,6 +171,8 @@ const handleSubmit = async (e) => {
       }
     } catch {
       mostrarMensaje("danger", "Error al conectar con el servidor");
+    } finally {
+      setIdToDelete(null); // Limpia el ID
     }
   };
 
@@ -305,7 +341,7 @@ const handleSubmit = async (e) => {
                       </button>
                       <button
                         className="btn btn-sm btn-outline-danger me-2"
-                        onClick={() => eliminarProducto(p.id_producto)}
+                        onClick={() => confirmarEliminacion(p.id_producto)}
                       >
                         <i className="bi bi-trash"></i>
                       </button>
@@ -314,9 +350,8 @@ const handleSubmit = async (e) => {
                         onClick={() => cambiarEstado(p.id_producto, p.activo)}
                       >
                         <i
-                          className={`bi ${
-                            p.activo ? "bi-toggle2-on text-success" : "bi-toggle2-off text-secondary"
-                          }`}
+                          className={`bi ${p.activo ? "bi-toggle2-on text-success" : "bi-toggle2-off text-secondary"
+                            }`}
                         ></i>
                       </button>
                     </td>
@@ -365,7 +400,7 @@ const handleSubmit = async (e) => {
                 {/* Formulario */}
                 <form onSubmit={handleSubmit}>
                   <div className="modal-body row g-3">
-                 
+
                     <div className="col-md-3">
                       <label className="form-label">Código</label>
                       <input
@@ -451,6 +486,25 @@ const handleSubmit = async (e) => {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
+
+      {/* Modal de Confirmación de Eliminación (NUEVO) */}
+      <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} centered>
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>¿Estás seguro de que deseas eliminar permanentemente el producto con ID: **{idToDelete}**?</p>
+          <p className="text-danger small fw-bold">Esta acción no se puede deshacer.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" onClick={handleDeleteConfirmation}>
+            <i className="bi bi-trash me-1"></i> Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 export const CreateUserForm = () => {
   const { authState, dispatch } = useAuth();
   const navigate = useNavigate();
-  
+
   // Verificar permisos de administrador
   if (authState.user?.rol !== 'Administrador') {
     return (
@@ -27,7 +27,7 @@ export const CreateUserForm = () => {
                     <strong>Tu rol actual:</strong> {authState.user?.rol || 'No definido'}
                   </small>
                 </div>
-                <button 
+                <button
                   onClick={() => navigate('/')}
                   className="btn btn-primary mt-3"
                 >
@@ -59,32 +59,32 @@ export const CreateUserForm = () => {
     setIsLoading(true);
     setQrCode(null);
     setUsuarioCreado(null);
-    
+
     try {
-      const response = await createUserAction(dispatch, { 
-        nombre, 
-        email, 
-        password, 
-        rol 
+      const response = await createUserAction(dispatch, {
+        nombre,
+        email,
+        password,
+        rol
       });
-      
+
       if (response.qrUrl) {
         setQrCode(response.qrUrl);
         setUsuarioCreado(response.usuario);
         toast.success(`✅ Usuario ${response.usuario.nombre} creado exitosamente!`);
       }
-      
+
       // Limpiar formulario
       setNombre('');
       setEmail('');
       setPassword('');
       setRol('Empleado');
-      
+
     } catch (error) {
       console.error('Error del backend:', error);
-      
+
       const errorMessage = error.message || 'Error al crear usuario';
-      
+
       // Detectar errores específicos del backend Joi
       if (errorMessage.includes('nombre') || errorMessage.includes('Nombre')) {
         setBackendErrors({ nombre: errorMessage });
@@ -98,7 +98,7 @@ export const CreateUserForm = () => {
         toast.error(errorMessage);
       }
     }
-    
+
     setIsLoading(false);
   };
 
@@ -132,7 +132,7 @@ export const CreateUserForm = () => {
               </small>
             </div>
           </div>
-          
+
           {qrCode && usuarioCreado ? (
             <div className="success-container text-center">
               <div className="alert alert-success">
@@ -141,26 +141,26 @@ export const CreateUserForm = () => {
                 <p><strong>Email:</strong> {usuarioCreado.email}</p>
                 <p><strong>Rol:</strong> {usuarioCreado.rol}</p>
               </div>
-              
+
               <div className="qr-section mt-4">
                 <h5>Configuración de Autenticación de Dos Factores (2FA)</h5>
                 <p className="text-muted">
                   Escanea este código QR con tu app de autenticación
                 </p>
-                <img 
-                  src={qrCode} 
-                  alt="Código QR para 2FA" 
+                <img
+                  src={qrCode}
+                  alt="Código QR para 2FA"
                   className="img-fluid border rounded"
                   style={{ maxWidth: '300px' }}
                 />
                 <div className="mt-3">
-                  <button 
+                  <button
                     onClick={handleCreateAnother}
                     className="btn btn-primary me-2"
                   >
                     Crear Otro Usuario
                   </button>
-                  <button 
+                  <button
                     onClick={() => navigate('/')}
                     className="btn btn-secondary"
                   >
@@ -174,7 +174,7 @@ export const CreateUserForm = () => {
               <form onSubmit={handleSubmit} className="login-form">
                 <h2 className="form-title">Crear Nuevo Usuario</h2>
                 <p className="form-subtitle">Complete la información del usuario</p>
-                
+
                 <div className="form-group">
                   <label htmlFor="nombre">Nombre Completo *</label>
                   <input
@@ -193,7 +193,7 @@ export const CreateUserForm = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="email">Email *</label>
                   <input
@@ -212,7 +212,7 @@ export const CreateUserForm = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="password">Contraseña *</label>
                   <input
@@ -231,14 +231,15 @@ export const CreateUserForm = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="rol">Rol *</label>
                   <select
                     id="rol"
                     value={rol}
                     onChange={handleInputChange(setRol, 'rol')}
-                    className={`form-control ${backendErrors.rol ? 'is-invalid' : ''}`}
+                    // className={`form-control ${backendErrors.rol ? 'is-invalid' : ''}`}
+                    className={`form-select ${backendErrors.rol ? 'is-invalid' : ''}`}
                     required
                     disabled={isLoading}
                   >
@@ -251,10 +252,10 @@ export const CreateUserForm = () => {
                     </div>
                   )}
                 </div>
-                
-                <button 
-                  type="submit" 
-                  className="submit-button btn btn-primary w-100" 
+
+                <button
+                  type="submit"
+                  className="submit-button btn btn-primary w-100"
                   disabled={isLoading}
                 >
                   {isLoading ? (

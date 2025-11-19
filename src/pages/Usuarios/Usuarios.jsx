@@ -4,7 +4,8 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 // Toast importation
 import { toast } from "react-toastify";
-
+// IMport
+import { Modal, Button } from "react-bootstrap";
 const API_URL = "https://backend-paws.onrender.com/api/v1";
 
 export default function Usuarios() {
@@ -25,6 +26,8 @@ export default function Usuarios() {
   });
 
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false); // Para el modal de confirmar/cancelar
+  const [idToDelete, setIdToDelete] = useState(null); // Para guardar el ID temporalmente
 
   // Filtros
   const [filtroId, setFiltroId] = useState("");
@@ -121,15 +124,51 @@ export default function Usuarios() {
     }
   };
   // Eliminar usuario (CORREGIDO)
-  const eliminarUsuario = async (id) => {
-    if (!window.confirm(`¿Seguro que deseas eliminar al usuario con ID ${id}?`))
-      return;
+  // const eliminarUsuario = async (id) => {
+  //   if (!window.confirm(`¿Seguro que deseas eliminar al usuario con ID ${id}?`))
+  //     return;
+
+  //   try {
+  //     const res = await fetch(`${API_URL}/usuarios/${id}`, {
+  //       method: "DELETE",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ id }), // <= AQUÍ tu backend sí elimina
+  //     });
+
+  //     const data = await res.json();
+
+  //     if (res.ok && data.success) {
+  //       mostrarMensaje("success", "Usuario eliminado correctamente");
+  //       fetchUsuarios(); // recargar tabla
+  //     } else {
+  //       mostrarMensaje(
+  //         "danger",
+  //         data.message || "No se pudo eliminar el usuario"
+  //       );
+  //     }
+  //   } catch (error) {
+  //     console.error("Error eliminando:", error);
+  //     mostrarMensaje("danger", "Error al conectar con el servidor");
+  //   }
+  // };
+  // Abrir el modal de confirmación
+  const solicitarConfirmacionEliminar = (id) => {
+    setIdToDelete(id);
+    setShowConfirmModal(true);
+  };
+  // Eliminar usuario (Lógica real)
+  const ejecutarEliminacion = async () => {
+    const id = idToDelete; // Usamos el ID guardado en el estado
+
+    // 1. Cerrar el modal inmediatamente para que el usuario sepa que la acción comenzó
+    setShowConfirmModal(false);
+    setIdToDelete(null);
 
     try {
       const res = await fetch(`${API_URL}/usuarios/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }), // <= AQUÍ tu backend sí elimina
+        body: JSON.stringify({ id }),
       });
 
       const data = await res.json();
@@ -148,7 +187,6 @@ export default function Usuarios() {
       mostrarMensaje("danger", "Error al conectar con el servidor");
     }
   };
-
   return (
     <div className="container-fluid vh-100 d-flex flex-column p-4 bg-white overflow-auto">
       {mensaje.texto && (
@@ -215,7 +253,7 @@ export default function Usuarios() {
               onChange={(e) => setFiltroRol(e.target.value)}
             /> */}
             <select
-              className="form-control"
+              className="form-select"
               value={filtroRol}
               onChange={(e) => setFiltroRol(e.target.value)}
             >
@@ -274,7 +312,7 @@ export default function Usuarios() {
 
                       <button
                         className="btn btn-sm btn-outline-danger"
-                        onClick={() => eliminarUsuario(u.id)}
+                        onClick={() => solicitarConfirmacionEliminar(u.id)}
                       >
                         <i className="bi bi-trash"></i>
                       </button>
@@ -360,7 +398,7 @@ export default function Usuarios() {
                   <label className="form-label">Rol</label>
 
                   <select
-                    className="form-control"
+                    className="form-select"
                     value={form.rol}
                     onChange={(e) => setForm({ ...form, rol: e.target.value })}
                   >
@@ -398,6 +436,36 @@ export default function Usuarios() {
           </div>
         </div>
       </div>
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN - USANDO REACT-BOOTSTRAP */}
+      <Modal
+        show={showConfirmModal}
+        onHide={() => setShowConfirmModal(false)}
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton className="bg-danger text-white">
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          <p>¿Estás seguro de que deseas eliminar al usuario con ID **{idToDelete}**? Esta acción no se puede deshacer.</p>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+            Cancelar
+          </Button>
+
+          <Button
+            variant="danger"
+            // ejecutarEliminacion cierra el modal internamente
+            onClick={ejecutarEliminacion}
+            disabled={!idToDelete}
+          >
+            <i className="bi bi-trash me-2"></i>Eliminar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }
