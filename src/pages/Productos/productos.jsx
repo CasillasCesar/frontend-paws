@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
-
+// import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap-icons/font/bootstrap-icons.css";
+// Toast importation
+import { toast } from "react-toastify";
 // IMport
 import { Modal, Button } from "react-bootstrap";
 
@@ -35,8 +36,19 @@ export default function Productos() {
 
   // 🔹 Mostrar mensaje temporal con detalles opcionales
   const mostrarMensaje = (tipo, texto, detalles = "") => {
-    setMensaje({ tipo, texto, detalles });
-    setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
+    switch (tipo) {
+          case "warning":
+            toast.info(texto, { position: "top-center", autoClose: 5000 })
+            break;
+          case "danger":
+            toast.error(texto, { position: "top-center", autoClose: 5000 })
+            break;
+          case "success":
+            toast.success(texto, { position: "top-center", autoClose: 5000 })
+            break;
+        }
+    // setMensaje({ tipo, texto, detalles });
+    // setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
   };
 
   // 🔹 Obtener productos
@@ -46,6 +58,8 @@ export default function Productos() {
       const res = await fetch(`${API_URL}/products`);
       const data = await res.json();
       if (res.ok) {
+        console.log(data.products);
+        
         setProductos(data.products || []);
       } else {
         mostrarMensaje("danger", data.message || "Error al cargar productos", data.details || "");
@@ -446,6 +460,7 @@ export default function Productos() {
                             className="form-control"
                             value={form.stock_minimo}
                             onChange={(e) => setForm({ ...form, stock_minimo: e.target.value })}
+                            min={1}
                           />
                         </div>
                         <div className="col-md-2">
@@ -455,6 +470,7 @@ export default function Productos() {
                             className="form-control"
                             value={form.stock_actual}
                             onChange={(e) => setForm({ ...form, stock_actual: e.target.value })}
+                            min={1}
                           />
                         </div>
                       </>
