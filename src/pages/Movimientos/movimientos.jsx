@@ -1,9 +1,33 @@
 import React, { useState, useEffect } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
+// Se asume que el CSS de Bootstrap y Toastify está cargado globalmente
 import { toast } from "react-toastify";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Fallback para entornos sin import.meta disponible
+const getApiUrl = () => {
+  try {
+    return import.meta.env.VITE_API_URL;
+  } catch (e) {
+    return ""; 
+  }
+};
+const API_URL = getApiUrl();
+
+// ---------------------------------------------------------
+// UTILIDADES: Carga dinámica de scripts para PDF
+// ---------------------------------------------------------
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
 
 export default function Movimientos() {
   const [movimientos, setMovimientos] = useState([]);
@@ -15,7 +39,7 @@ export default function Movimientos() {
   const [proveedores, setProveedores] = useState([]);
   const [clientes, setClientes] = useState([]);
 
-  // Usuario logeado
+  // Usuario logeado (usando localStorage temporalmente)
   const usuarioLogeado = JSON.parse(localStorage.getItem("userData"));
 
   const [form, setForm] = useState({
@@ -141,6 +165,156 @@ export default function Movimientos() {
   };
 
   // =======================
+  // GENERACIÓN DE REPORTE PDF
+  // =======================
+  const generarReportePDF = async () => {
+    if (movimientos.length === 0) {
+      mostrarMensaje("warning", "No hay datos de movimientos para generar el reporte.");
+      return;
+    }
+
+    const productoSeleccionado = productos.find(p => p.id_producto === Number(form.id_producto));
+    if (!productoSeleccionado) {
+        mostrarMensaje("danger", "Producto no encontrado.");
+        return;
+    }
+
+    mostrarMensaje("warning", "Generando Reporte de Movimientos...", "Por favor espera un momento.");
+
+    try {
+      // 1. Cargar librerías
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js");
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // --- CÁLCULOS Y CONFIG ---
+      const colorAzul = [41, 128, 185]; 
+      const colorRojo = [231, 76, 60];  
+      const colorVerde = [39, 174, 96]; 
+      const colorGris = [150, 150, 150];
+      const colorNegro = [0, 0, 0];
+      
+      let currentY = 20; 
+
+      // --- ENCABEZADO ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(...colorAzul);
+      doc.text("Historial de Movimientos de Inventario", 105, currentY, { align: "center" });
+      currentY += 8;
+      
+      doc.setFontSize(10);
+      doc.setTextColor(...colorGris);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Fecha: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 105, currentY, { align: "center" });
+      currentY += 8;
+      
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, currentY, 196, currentY);
+      currentY += 8; 
+
+      // ==========================================
+      // 1. INFORMACIÓN DEL PRODUCTO
+      // ==========================================
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...colorNegro);
+      doc.text(`Producto: ${productoSeleccionado.nombre} (${productoSeleccionado.codigo})`, 14, currentY);
+      currentY += 8;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Categoría: ${productoSeleccionado.categoria || 'N/A'}`, 14, currentY);
+      doc.text(`Unidad: ${productoSeleccionado.unidad || 'N/A'}`, 105, currentY);
+      currentY += 10;
+      
+      // ==========================================
+      // 2. RESUMEN DE MOVIMIENTOS
+      // ==========================================
+      const entradas = movimientos.filter(m => m.tipo === 'Entrada').reduce((sum, m) => sum + Number(m.cantidad), 0);
+      const salidas = movimientos.filter(m => m.tipo === 'Salida').reduce((sum, m) => sum + Number(m.cantidad), 0);
+      const saldoFinal = productoSeleccionado.stock_actual; // Usamos el stock final del producto
+
+      currentY += 5;
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(14, currentY, 180, 25, 3, 3, "S"); 
+
+      // Título Resumen
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.setTextColor(...colorAzul);
+      doc.text("Resumen de Transacciones", 14 + 2, currentY + 5);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(...colorNegro);
+      
+      // Entradas
+      doc.setTextColor(...colorVerde);
+      doc.text(`Entradas Totales: ${entradas} ${productoSeleccionado.unidad}`, 14 + 5, currentY + 15);
+
+      // Salidas
+      doc.setTextColor(...colorRojo);
+      doc.text(`Salidas Totales: ${salidas} ${productoSeleccionado.unidad}`, 105, currentY + 15);
+      
+      // Saldo Final
+      doc.setTextColor(...colorNegro);
+      doc.setFont("helvetica", "bold");
+      doc.text(`Stock Actual (Final): ${saldoFinal} ${productoSeleccionado.unidad}`, 14 + 5, currentY + 22);
+
+      currentY += 35;
+      
+      // ==========================================
+      // 3. TABLA DE DETALLES
+      // ==========================================
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...colorNegro);
+      doc.text("Detalle de Movimientos Registrados", 14, currentY);
+      currentY += 5;
+
+      // Mapear los datos para la tabla
+      const movimientosData = movimientosFiltrados.map(m => [
+        m.id_movimiento,
+        new Date(m.fecha).toLocaleString(),
+        m.tipo,
+        m.cantidad,
+        m.referencia || 'N/A',
+        m.responsable
+      ]);
+
+      doc.autoTable({
+        startY: currentY,
+        head: [['ID', 'Fecha/Hora', 'Tipo', 'Cantidad', 'Referencia', 'Responsable']],
+        body: movimientosData,
+        headStyles: { fillColor: colorAzul, fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
+        theme: 'striped',
+        didParseCell: function (data) {
+            // Colorear filas de SALIDA en rojo
+            if (data.section === 'body' && data.row.raw[2] === 'Salida') {
+                data.cell.styles.textColor = colorRojo;
+                data.cell.styles.fontStyle = 'bold';
+            }
+        }
+      });
+      
+      // Salvar el documento
+      doc.save(`Reporte_Movimientos_${productoSeleccionado.nombre.replace(/\s/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      mostrarMensaje("success", "Reporte PDF descargado correctamente.");
+
+    } catch (error) {
+      console.error("Error PDF:", error);
+      mostrarMensaje("danger", "Error al generar PDF");
+    }
+  };
+
+
+  // =======================
   // REGISTRO MOVIMIENTO
   // =======================
   const handleSubmit = async (e) => {
@@ -167,8 +341,6 @@ export default function Movimientos() {
     if (form.tipo === "Entrada") delete body.id_cliente;
     if (form.tipo === "Salida") delete body.id_proveedor;
 
-    console.log("BODY ENVIADO:", body);
-
     try {
       const res = await fetch(`${API_URL}/movimientos/registrar`, {
         method: "POST",
@@ -181,7 +353,8 @@ export default function Movimientos() {
       if (res.ok) {
         mostrarMensaje("success", data.message);
         setShowModal(false);
-        fetchHistorial();
+        // Volvemos a cargar el historial para actualizar la tabla
+        fetchHistorial(); 
       } else {
         mostrarMensaje("danger", data.message);
       }
@@ -199,30 +372,45 @@ export default function Movimientos() {
         .includes(filtroReferencia.toLowerCase())
   );
 
+  const productoSeleccionadoEnForm = productos.find(p => p.id_producto === Number(form.id_producto));
+  const puedeGenerarReporte = movimientos.length > 0 && !!productoSeleccionadoEnForm;
+
+
   return (
     <div className="container-fluid p-4 bg-white vh-100 overflow-auto">
       {/* Encabezado */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="fw-bold text-primary">Movimientos de Inventario</h4>
 
-        <button
-          className="btn btn-success"
-          onClick={() => {
-            setShowModal(true);
-            setForm({
-              tipo: "Entrada",
-              id_producto: "",
-              cantidad: "",
-              referencia: "",
-              responsable: usuarioLogeado?.nombre || "",
-              id_proveedor: "",
-              id_cliente: "",
-              id_usuario: usuarioLogeado?.id || "",
-            });
-          }}
-        >
-          <i className="bi bi-plus-circle me-2"></i>Registrar Movimiento
-        </button>
+        <div>
+            {/* BOTÓN PARA GENERAR PDF */}
+            <button 
+                className="btn btn-danger me-2"
+                onClick={generarReportePDF}
+                disabled={!puedeGenerarReporte}
+            >
+                <i className="bi bi-file-earmark-pdf me-2"></i>Exportar PDF
+            </button>
+            
+            <button
+              className="btn btn-success"
+              onClick={() => {
+                setShowModal(true);
+                setForm({
+                  tipo: "Entrada",
+                  id_producto: "",
+                  cantidad: "",
+                  referencia: "",
+                  responsable: usuarioLogeado?.nombre || "",
+                  id_proveedor: "",
+                  id_cliente: "",
+                  id_usuario: usuarioLogeado?.id || "",
+                });
+              }}
+            >
+              <i className="bi bi-plus-circle me-2"></i>Registrar Movimiento
+            </button>
+        </div>
       </div>
 
       {/* Consultar historial */}
@@ -244,8 +432,8 @@ export default function Movimientos() {
             ))}
           </select>
 
-          <button className="btn btn-primary" onClick={fetchHistorial}>
-            <i className="bi bi-search"></i>
+          <button className="btn btn-primary" onClick={fetchHistorial} disabled={!form.id_producto}>
+            <i className="bi bi-search"></i> Consultar
           </button>
         </div>
       </div>
@@ -333,7 +521,7 @@ export default function Movimientos() {
               ) : (
                 <tr>
                   <td colSpan="6" className="text-center py-4">
-                    No hay movimientos
+                    No hay movimientos para el producto seleccionado.
                   </td>
                 </tr>
               )}
@@ -347,7 +535,7 @@ export default function Movimientos() {
       ============================ */}
       {showModal && (
         <>
-          <div className="modal fade show d-block">
+          <div className="modal fade show d-block" style={{background: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog modal-lg">
               <div className="modal-content">
                 <div className="modal-header bg-primary text-white">
@@ -384,6 +572,7 @@ export default function Movimientos() {
                         onChange={(e) =>
                           setForm({ ...form, id_producto: e.target.value })
                         }
+                        required
                       >
                         <option value="">Seleccione un producto</option>
                         {productos.map((p) => (
@@ -405,6 +594,7 @@ export default function Movimientos() {
                         onChange={(e) =>
                           setForm({ ...form, cantidad: e.target.value })
                         }
+                        required
                       />
                     </div>
 
@@ -418,6 +608,7 @@ export default function Movimientos() {
                           onChange={(e) =>
                             setForm({ ...form, id_proveedor: e.target.value })
                           }
+                          required
                         >
                           <option value="">Seleccione proveedor</option>
                           {proveedores.map((prov) => (
@@ -442,6 +633,7 @@ export default function Movimientos() {
                           onChange={(e) =>
                             setForm({ ...form, id_cliente: e.target.value })
                           }
+                          required
                         >
                           <option value="">Seleccione cliente</option>
                           {clientes.map((c) => (
@@ -487,7 +679,7 @@ export default function Movimientos() {
                       Cerrar
                     </button>
 
-                    <button className="btn btn-success" type="submit">
+                    <button className="btn btn-success" type="submit" disabled={loading}>
                       <i className="bi bi-save me-1"></i> Guardar Movimiento
                     </button>
                   </div>
