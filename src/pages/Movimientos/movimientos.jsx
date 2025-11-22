@@ -269,12 +269,47 @@ export default function Movimientos() {
       currentY += 35;
       
       // ==========================================
-      // 3. TABLA DE DETALLES
+      // 3. GRÁFICA DE FLUJO (Entradas vs Salidas)
       // ==========================================
+      if (currentY > 250) { doc.addPage(); currentY = 20; }
+      
       doc.setFont("helvetica", "bold");
       doc.setFontSize(14);
       doc.setTextColor(...colorNegro);
-      doc.text("Detalle de Movimientos Registrados", 14, currentY);
+      doc.text("3. Gráfica de Entradas vs Salidas", 14, currentY);
+      currentY += 10;
+
+      const maxMovimiento = Math.max(entradas, salidas, 1);
+      const chartWidth = 150; // Ancho máximo de la barra
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      
+      // Bar 1: Entradas
+      const barWidthEntradas = (entradas / maxMovimiento) * chartWidth;
+      doc.setTextColor(...colorVerde);
+      doc.text(`Entradas (${entradas})`, 14, currentY + 4);
+      doc.setFillColor(...colorVerde);
+      doc.rect(70, currentY, barWidthEntradas, 6, "F"); 
+      currentY += 10;
+
+      // Bar 2: Salidas
+      const barWidthSalidas = (salidas / maxMovimiento) * chartWidth;
+      doc.setTextColor(...colorRojo);
+      doc.text(`Salidas (${salidas})`, 14, currentY + 4);
+      doc.setFillColor(...colorRojo);
+      doc.rect(70, currentY, barWidthSalidas, 6, "F"); 
+      currentY += 15; // Espacio después de la gráfica
+
+      // ==========================================
+      // 4. TABLA DE DETALLES 
+      // ==========================================
+      if (currentY > 260) { doc.addPage(); currentY = 20; }
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...colorNegro);
+      doc.text("4. Detalle de Movimientos Registrados", 14, currentY);
       currentY += 5;
 
       // Mapear los datos para la tabla
