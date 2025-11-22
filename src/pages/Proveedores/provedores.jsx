@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
+// import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap-icons/font/bootstrap-icons.css";
 // Toast importation
 import { toast } from "react-toastify";
 // IMport
 import { Modal, Button } from "react-bootstrap";
-const API_URL = import.meta.env.VITE_API_URL;
+
+// Ajuste para evitar error de import.meta en ciertos entornos
+const getApiUrl = () => {
+  try {
+    return import.meta.env.VITE_API_URL;
+  } catch (e) {
+    return "https://backend-paws.onrender.com/api/v1"; // Fallback seguro
+  }
+};
+const API_URL = getApiUrl();
 
 export default function Proveedores() {
   const [proveedores, setProveedores] = useState([]);
@@ -21,8 +30,8 @@ export default function Proveedores() {
   const [showModal, setShowModal] = useState(false);
 
   // NUEVOS ESTADOS para la confirmación de ELIMINAR
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); // Visibilidad del modal de confirmación
-  const [idToDelete, setIdToDelete] = useState(null); // ID del proveedor a eliminar
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false); 
+  const [idToDelete, setIdToDelete] = useState(null); 
 
   // Filtros
   const [filtroNombre, setFiltroNombre] = useState("");
@@ -40,8 +49,101 @@ export default function Proveedores() {
         toast.success(texto, { position: "top-center", autoClose: 5000 })
         break;
     }
-    // setMensaje({ tipo, texto, detalles });
-    // setTimeout(() => setMensaje({ tipo: "", texto: "", detalles: "" }), 6000);
+  };
+
+  // ---------------------------------------------------------
+  //  UTILIDADES: Carga dinámica de scripts para PDF
+  // ---------------------------------------------------------
+  const loadScript = (src) => {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) {
+        resolve();
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  };
+
+  // ---------------------------------------------------------
+  //  LÓGICA DE GENERACIÓN DE PDF (SIMPLIFICADO)
+  // ---------------------------------------------------------
+  const generarReportePDF = async () => {
+    if (proveedores.length === 0) {
+      mostrarMensaje("warning", "No hay datos para generar el reporte.");
+      return;
+    }
+
+    mostrarMensaje("warning", "Generando lista de proveedores...");
+
+    try {
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js");
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // --- CONFIGURACIÓN ---
+      const colorPrincipal = [41, 128, 185]; // Azul profesional
+      
+      // --- ENCABEZADO SIMPLE ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(...colorPrincipal);
+      doc.text("Listado de Proveedores", 14, 20);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Fecha de emision: ${new Date().toLocaleDateString()}`, 14, 26);
+
+      // Línea divisoria simple
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, 30, 196, 30);
+
+      // --- TABLA LIMPIA ---
+      // Ordenamos por nombre para facilitar la búsqueda visual
+      const sortedProveedores = [...proveedores].sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+      doc.autoTable({
+        startY: 35,
+        head: [['Empresa / Proveedor', 'Telefono', 'Contacto Directo']],
+        body: sortedProveedores.map(p => [
+          p.nombre,
+          p.telefono || "—",
+          p.contacto || "—"
+        ]),
+        headStyles: { 
+            fillColor: colorPrincipal,
+            textColor: 255,
+            fontStyle: 'bold',
+            halign: 'left'
+        },
+        alternateRowStyles: { fillColor: [245, 245, 245] }, // Filas alternas gris muy claro
+        styles: { 
+            fontSize: 11, 
+            cellPadding: 4,
+            textColor: 50
+        },
+        columnStyles: {
+            0: { fontStyle: 'bold' }, // Nombre de la empresa en negrita
+            1: { cellWidth: 50 },     // Ancho fijo para teléfono
+            2: { fontStyle: 'italic' } // Contacto en cursiva
+        },
+        theme: 'plain' // Tema minimalista (sin líneas verticales pesadas)
+      });
+
+      doc.save(`Proveedores_${new Date().toISOString().slice(0, 10)}.pdf`);
+      mostrarMensaje("success", "Lista descargada correctamente.");
+
+    } catch (error) {
+      console.error("Error PDF:", error);
+      mostrarMensaje("danger", "Error al generar el archivo.");
+    }
   };
 
   // 🔹 Obtener proveedores
@@ -103,43 +205,20 @@ export default function Proveedores() {
     }
   };
 
-  // 🔹 Eliminar proveedor
-  // const eliminarProveedor = async (id) => {
-  //   if (!confirm("¿Seguro que deseas eliminar este proveedor?")) return;
-
-  //   try {
-  //     const res = await fetch(`${API_URL}/proveedores/delete`, {
-  //       method: "DELETE",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ id_proveedor: id }),
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       mostrarMensaje("success", data.message);
-  //       fetchProveedores();
-  //     } else {
-  //       mostrarMensaje("danger", data.message);
-  //     }
-  //   } catch {
-  //     mostrarMensaje("danger", "No se pudo conectar al servidor");
-  //   }
-  // };
   // Iniciar el flujo de confirmación para eliminar
   const solicitarConfirmacionEliminar = (id) => {
-    setIdToDelete(id); // Guarda el ID temporalmente
-    setShowDeleteConfirm(true); // Muestra el nuevo modal
+    setIdToDelete(id); 
+    setShowDeleteConfirm(true); 
   };
+  
   // Eliminar (Lógica real que se ejecuta al confirmar en el modal)
   const ejecutarEliminacion = async () => {
-    const id = idToDelete; // Usamos el ID guardado
+    const id = idToDelete; 
 
-    // 1. Cerrar el modal inmediatamente y limpiar el ID
     setShowDeleteConfirm(false);
     setIdToDelete(null);
 
-    if (!id) return; // Seguridad extra
+    if (!id) return; 
 
     try {
       const res = await fetch(`${API_URL}/proveedores/delete`, {
@@ -160,8 +239,6 @@ export default function Proveedores() {
       mostrarMensaje("danger", "No se pudo conectar al servidor");
     }
   };
-
-  // Se elimina la antigua función eliminarProveedor(id)
 
   // Editar proveedor
   const editarProveedor = (p) => {
@@ -190,21 +267,32 @@ export default function Proveedores() {
 
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="fw-bold text-primary">Gestión de Proveedores</h4>
-        <button
-          className="btn btn-success"
-          onClick={() => {
-            setModoEdicion(false);
-            setForm({
-              id_proveedor: "",
-              nombre: "",
-              telefono: "",
-              contacto: "",
-            });
-            setShowModal(true);
-          }}
-        >
-          <i className="bi bi-plus-circle me-2"></i>Nuevo Proveedor
-        </button>
+        <div>
+            {/* Botón de Exportar PDF */}
+            <button 
+                className="btn btn-danger me-2"
+                onClick={generarReportePDF}
+                disabled={proveedores.length === 0}
+            >
+                <i className="bi bi-file-earmark-pdf me-2"></i>Lista PDF
+            </button>
+
+            <button
+            className="btn btn-success"
+            onClick={() => {
+                setModoEdicion(false);
+                setForm({
+                id_proveedor: "",
+                nombre: "",
+                telefono: "",
+                contacto: "",
+                });
+                setShowModal(true);
+            }}
+            >
+            <i className="bi bi-plus-circle me-2"></i>Nuevo Proveedor
+            </button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -292,7 +380,7 @@ export default function Proveedores() {
       {/* Modal */}
       {showModal && (
         <>
-          <div className="modal fade show d-block" tabIndex="-1">
+          <div className="modal fade show d-block" tabIndex="-1" style={{background: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header bg-primary text-white">
@@ -366,7 +454,7 @@ export default function Proveedores() {
           <div className="modal-backdrop fade show"></div>
         </>
       )}
-      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN - USANDO REACT-BOOTSTRAP */}
+      {/* MODAL DE CONFIRMACIÓN DE ELIMINACIÓN */}
       <Modal show={showDeleteConfirm} onHide={() => setShowDeleteConfirm(false)} backdrop="static" keyboard={false}>
         <Modal.Header closeButton className="bg-danger text-white">
           <Modal.Title>Confirmar Eliminación</Modal.Title>
