@@ -20,7 +20,7 @@ export default function Usuarios() {
     id: "",
     nombre: "",
     rol: "Empleado",
-    correo: "",
+    email: "",
     password: "", // Agregado para creación
   });
 
@@ -150,7 +150,7 @@ export default function Usuarios() {
             body: listaAdmins.map(u => [
             u.id,
             u.nombre,
-            u.email || u.correo || "Sin correo"
+            u.email || "Sin correo"
             ]),
             headStyles: { fillColor: colorMorado }, // Encabezado morado
             styles: { fontSize: 10 },
@@ -188,7 +188,7 @@ export default function Usuarios() {
             body: listaEmpleados.map(u => [
             u.id,
             u.nombre,
-            u.email || u.correo || "Sin correo"
+            u.email || "Sin correo"
             ]),
             headStyles: { fillColor: colorAzul }, // Encabezado azul
             styles: { fontSize: 10 },
@@ -275,7 +275,7 @@ export default function Usuarios() {
       id: "",
       nombre: "",
       rol: "Empleado",
-      correo: "",
+      email: "",
       password: "",
     });
     setShowModal(true);
@@ -288,7 +288,7 @@ export default function Usuarios() {
       id: u.id,
       nombre: u.nombre,
       rol: u.rol,
-      correo: u.email || u.correo || "", // Unificar campos
+      email: u.email || "", // Unificar campos
       password: "", // No mostramos password al editar
     });
     setShowModal(true);
@@ -307,12 +307,12 @@ export default function Usuarios() {
     const payload = { ...form };
     if (modoEdicion) {
       // Al editar, enviamos email en lugar de correo si el backend lo prefiere, o ambos
-      payload.email = form.correo; 
+      payload.email = form.email; 
       // Generalmente no enviamos password vacío al editar a menos que se cambie
       if (!payload.password) delete payload.password; 
     } else {
       // Al crear
-       payload.email = form.correo; 
+       payload.email = form.email; 
     }
 
     try {
@@ -470,7 +470,7 @@ export default function Usuarios() {
                     <td>{u.id}</td>
                     <td>{u.nombre}</td>
                     <td>{u.rol}</td>
-                    <td>{u.email || u.correo || ""}</td>
+                    <td>{u.email || ""}</td>
 
                     <td>
                       <button
@@ -527,8 +527,8 @@ export default function Usuarios() {
                     <input
                       type="email"
                       className="form-control"
-                      value={form.correo}
-                      onChange={(e) => setForm({ ...form, correo: e.target.value })}
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
                     />
                   </div>
 
