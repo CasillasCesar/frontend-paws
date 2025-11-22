@@ -1,12 +1,35 @@
 import React, { useEffect, useState } from "react";
-// import "bootstrap/dist/css/bootstrap.min.css";
-// import "bootstrap-icons/font/bootstrap-icons.css";
 // Toast importation
 import { toast } from "react-toastify";
 // IMport
 import { Modal, Button } from "react-bootstrap";
 
-const API_URL = import.meta.env.VITE_API_URL;
+// Fallback para entornos sin import.meta disponible
+const getApiUrl = () => {
+  try {
+    return import.meta.env.VITE_API_URL;
+  } catch (e) {
+    return ""; 
+  }
+};
+const API_URL = getApiUrl();
+
+// ---------------------------------------------------------
+// UTILIDADES: Carga dinámica de scripts para PDF
+// ---------------------------------------------------------
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+};
 
 export default function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -55,7 +78,9 @@ export default function Clientes() {
       const data = await res.json();
 
       if (res.ok) {
-        setClientes(data);
+        // Aseguramos que data sea un array, si la API retorna un objeto que contiene el array, ajustamos:
+        const lista = data.clientes || data; 
+        setClientes(Array.isArray(lista) ? lista : []);
       } else {
         mostrarMensaje("danger", data.message || "Error al cargar clientes");
       }
@@ -70,6 +95,103 @@ export default function Clientes() {
     fetchClientes();
   }, []);
 
+  // ---------------------------------------------------------
+  // LÓGICA DE GENERACIÓN DE PDF
+  // ---------------------------------------------------------
+  const generarReportePDF = async () => {
+    if (clientesFiltrados.length === 0) {
+      mostrarMensaje("warning", "No hay datos filtrados para generar el reporte.");
+      return;
+    }
+
+    mostrarMensaje("warning", "Generando Reporte de Clientes...", "Por favor espera un momento.");
+
+    try {
+      // 1. Cargar librerías
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+      await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js");
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // --- CONFIGURACIÓN ---
+      const colorAzul = [41, 128, 185]; 
+      const colorGris = [100, 100, 100];
+      const colorNegro = [0, 0, 0];
+      
+      let currentY = 20; 
+
+      // --- ENCABEZADO ---
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(20);
+      doc.setTextColor(...colorAzul);
+      doc.text("Reporte de Clientes Registrados", 105, currentY, { align: "center" });
+      currentY += 8;
+      
+      doc.setFontSize(10);
+      doc.setTextColor(...colorGris);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Fecha: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 105, currentY, { align: "center" });
+      currentY += 8;
+      
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(14, currentY, 196, currentY);
+      currentY += 8; 
+
+      // ==========================================
+      // 1. RESUMEN
+      // ==========================================
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...colorNegro);
+      doc.text(`Total de Clientes: ${clientes.length}`, 14, currentY);
+      currentY += 10;
+      
+      doc.setFontSize(10);
+      doc.text(`Clientes mostrados en este reporte (despues de filtrar): ${clientesFiltrados.length}`, 14, currentY);
+      currentY += 15;
+
+
+      // ==========================================
+      // 2. TABLA DE DETALLES
+      // ==========================================
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(...colorNegro);
+      doc.text("Detalle de Clientes", 14, currentY);
+      currentY += 5;
+
+      // Mapear los datos para la tabla
+      const clientesData = clientesFiltrados.map(c => [
+        c.id_cliente,
+        c.nombre,
+        c.telefono,
+        c.contacto
+      ]);
+
+      doc.autoTable({
+        startY: currentY,
+        head: [['ID', 'Nombre', 'Teléfono', 'Detalle de Contacto']],
+        body: clientesData,
+        headStyles: { fillColor: colorAzul, fontStyle: 'bold' },
+        styles: { fontSize: 9, cellPadding: 2, overflow: 'linebreak' },
+        columnStyles: {
+            3: { cellWidth: 'auto' } // Columna de contacto más ancha
+        },
+        theme: 'striped'
+      });
+      
+      // Salvar el documento
+      doc.save(`Reporte_Clientes_${new Date().toISOString().slice(0, 10)}.pdf`);
+      mostrarMensaje("success", "Reporte PDF descargado correctamente.");
+
+    } catch (error) {
+      console.error("Error PDF:", error);
+      mostrarMensaje("danger", "Error al generar PDF");
+    }
+  };
+  
   // Crear / Actualizar
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,29 +236,6 @@ export default function Clientes() {
     setShowModal(true);
   };
 
-  // Eliminar
-  // const eliminarCliente = async (id) => {
-  //   if (!confirm("¿Deseas eliminar este cliente?")) return;
-
-  //   try {
-  //     const res = await fetch(`${API_URL}/clientes/delete`, {
-  //       method: "DELETE",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ id_cliente: id }),
-  //     });
-
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       mostrarMensaje("success", "Cliente eliminado correctamente");
-  //       fetchClientes();
-  //     } else {
-  //       mostrarMensaje("danger", data.message);
-  //     }
-  //   } catch {
-  //     mostrarMensaje("danger", "No se pudo conectar con el servidor");
-  //   }
-  // };
   // Iniciar el flujo de confirmación para eliminar
   const solicitarConfirmacionEliminar = (id) => {
     setIdToDelete(id); // Guarda el ID temporalmente
@@ -175,8 +274,8 @@ export default function Clientes() {
   // Filtrar
   const clientesFiltrados = clientes.filter(
     (c) =>
-      c.nombre.toLowerCase().includes(filtroNombre.toLowerCase()) &&
-      c.telefono.toLowerCase().includes(filtroTelefono.toLowerCase())
+      c.nombre?.toLowerCase().includes(filtroNombre.toLowerCase()) &&
+      c.telefono?.toLowerCase().includes(filtroTelefono.toLowerCase())
   );
 
   return (
@@ -196,16 +295,27 @@ export default function Clientes() {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="fw-bold text-primary mb-0">Gestión de Clientes</h4>
 
-        <button
-          className="btn btn-success"
-          onClick={() => {
-            setModoEdicion(false);
-            setForm({ id_cliente: "", nombre: "", telefono: "", contacto: "" });
-            setShowModal(true);
-          }}
-        >
-          <i className="bi bi-plus-circle me-2"></i>Nuevo Cliente
-        </button>
+        <div>
+            {/* BOTÓN PARA GENERAR PDF */}
+            <button 
+                className="btn btn-danger me-2"
+                onClick={generarReportePDF}
+                disabled={clientesFiltrados.length === 0}
+            >
+                <i className="bi bi-file-earmark-pdf me-2"></i>Exportar PDF
+            </button>
+
+            <button
+              className="btn btn-success"
+              onClick={() => {
+                setModoEdicion(false);
+                setForm({ id_cliente: "", nombre: "", telefono: "", contacto: "" });
+                setShowModal(true);
+              }}
+            >
+              <i className="bi bi-plus-circle me-2"></i>Nuevo Cliente
+            </button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -295,7 +405,7 @@ export default function Clientes() {
       {/* Modal */}
       {showModal && (
         <>
-          <div className="modal fade show d-block">
+          <div className="modal fade show d-block" style={{background: 'rgba(0,0,0,0.5)'}}>
             <div className="modal-dialog modal-lg">
               <div className="modal-content">
 
@@ -319,6 +429,7 @@ export default function Clientes() {
                         className="form-control"
                         value={form.nombre}
                         onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+                        required
                       />
                     </div>
 
@@ -331,6 +442,7 @@ export default function Clientes() {
                         onChange={(e) => setForm({ ...form, telefono: e.target.value })}
                         minLength={8}
                         maxLength={8}
+                        required
                       />
                     </div>
 
@@ -345,7 +457,7 @@ export default function Clientes() {
                   </div>
 
                   <div className="modal-footer">
-                    <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                    <button className="btn btn-secondary" type="button" onClick={() => setShowModal(false)}>
                       Cerrar
                     </button>
 
